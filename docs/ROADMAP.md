@@ -43,13 +43,13 @@ Guiding rule: **make it work end-to-end on short clips first, then make it good,
 
 **Exit criteria results (2026-11-21)**
 
-| Criterion                                | Result                                                                                                                                        |
-| ---------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
-| `make up && make ai` brings up the stack | ✅ Verified locally (API container + native AI service). Not yet tried from a fresh clone on another machine                                  |
-| Real readiness checks                    | ✅ API: Postgres, Redis, S3 HeadBucket, AI service (non-critical). AI: Postgres, Redis, Ollama. Redis outage → 503, recovery → 200, verified  |
-| CI green on a PR                         | ⏳ Workflow written (`.github/workflows/ci.yml`) but **not yet run**: the repo has no GitHub remote. Every CI step was run locally and passes |
-| Spikes documented, ADRs updated          | ✅ Spike A 8/8 scenarios, Spike B all checks: [BENCHMARKS.md](BENCHMARKS.md); ADR-005 and ADR-010 accepted                                    |
-| OpenTelemetry baseline                   | ✅ Traces from `vip-api` (27 spans per readiness request: Express, pg, Redis, S3, fetch) and `vip-ai-api` visible in local Tempo/Grafana      |
+| Criterion                                | Result                                                                                                                                                                                                          |
+| ---------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `make up && make ai` brings up the stack | ✅ Verified locally (API container + native AI service). Not yet tried from a fresh clone on another machine                                                                                                    |
+| Real readiness checks                    | ✅ API: Postgres, Redis, S3 HeadBucket, AI service (non-critical). AI: Postgres, Redis, Ollama. Redis outage → 503, recovery → 200, verified                                                                    |
+| CI green on a PR                         | ✅ First run on push to `main` (run 44930342132): `changes`, `api` (incl. integration tests against Postgres, Redis, SeaweedFS), `web`, `ai` (incl. CPU image build) all green. First PR run comes with Phase 2 |
+| Spikes documented, ADRs updated          | ✅ Spike A 8/8 scenarios, Spike B all checks: [BENCHMARKS.md](BENCHMARKS.md); ADR-005 and ADR-010 accepted                                                                                                      |
+| OpenTelemetry baseline                   | ✅ Traces from `vip-api` (27 spans per readiness request: Express, pg, Redis, S3, fetch) and `vip-ai-api` visible in local Tempo/Grafana                                                                        |
 
 Deviations: SeaweedFS replaces MinIO (ADR-020); the module-boundary lint rule moves to Phase 2 (ADR-021).
 
