@@ -1,0 +1,112 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      api: ${{ steps.filter.outputs.api }}
+      web: ${{ steps.filter.outputs.web }}
+      ai: ${{ steps.filter.outputs.ai }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            api: ['apps/api/**', 'pnpm-lock.yaml', '.github/workflows/ci.yml']
+            web: ['apps/web/**', 'pnpm-lock.yaml', '.github/workflows/ci.yml']
+            ai:  ['services/ai/**', '.github/workflows/ci.yml']
+
+  api:
+    needs: changes
+    if: needs.changes.outputs.api == 'true'
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env: { POSTGRES_USER: vip, POSTGRES_PASSWORD: vip_ci, POSTGRES_DB: vip }
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U vip" --health-interval 5s --health-timeout 3s --health-retries 20
+      redis:
+        image: redis:7.4-alpine
+        ports: ['6379:6379']
+        options: >-
+          --health-cmd "redis-cli ping" --health-interval 5s --health-timeout 3s --health-retries 20
+    env:
+      DATABASE_URL: postgres://vip:vip_ci@localhost:5432/vip
+      REDIS_URL: redis://localhost:6379
+      S3_ENDPOINT: http://localhost:8333
+      S3_REGION: us-east-1
+      S3_BUCKET: vip-media
+      S3_ACCESS_KEY_ID: ci_access
+      S3_SECRET_ACCESS_KEY: ci_secret_value
+      S3_FORCE_PATH_STYLE: 'true'
+      AI_API_URL: http://localhost:8000
+      AI_SERVICE_TOKEN: ci-service-token-not-secret
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with: { node-version-file: .nvmrc, cache: pnpm }
+      - run: pnpm install --frozen-lockfile
+      - name: Start S3-compatible storage
+        run: |
+          docker run -d --name storage -p 8333:8333 \
+            -e S3_ACCESS_KEY_ID -e S3_SECRET_ACCESS_KEY \
+            -v "$PWD/infra/compose/seaweedfs/entrypoint.sh:/entrypoint.sh:ro" \
+            --entrypoint /bin/sh chrislusf/seaweedfs:latest /entrypoint.sh
+          for i in $(seq 1 60); do curl -s -o /dev/null localhost:8333 && break; sleep 1; done
+          sleep 3
+          docker exec storage sh -c "echo 's3.bucket.create -name vip-media' | weed shell -master=localhost:9333"
+      - run: pnpm --filter @vip/api lint
+      - run: pnpm --filter @vip/api typecheck
+      - run: pnpm --filter @vip/api test
+      - run: pnpm --filter @vip/api build
+      - run: pnpm --filter @vip/api db:migrate
+      - run: pnpm --filter @vip/api test:integration
+
+  web:
+    needs: changes
+    if: needs.changes.outputs.web == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with: { node-version-file: .nvmrc, cache: pnpm }
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @vip/web build
+      - run: pnpm --filter @vip/web typecheck
+
+  ai:
+    needs: changes
+    if: needs.changes.outputs.ai == 'true'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: services/ai
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with: { enable-cache: true }
+      # The `ml` group only resolves on Apple Silicon; Linux installs skip it via markers.
+      - run: uv sync --frozen
+      - run: uv run ruff check .
+      - run: uv run ruff format --check .
+      - run: uv run mypy
+      - run: uv run pytest
+      - name: Build CPU image
+        run: docker build -t vip-ai:ci .

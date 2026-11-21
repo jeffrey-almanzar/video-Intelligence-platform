@@ -1,0 +1,36 @@
+# deps
+node_modules/
+.pnpm-store/
+.venv/
+__pycache__/
+*.pyc
+
+# build
+dist/
+build/
+.next/
+*.tsbuildinfo
+coverage/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# env & secrets
+.env
+.env.*
+!.env.example
+
+# local data / artifacts
+.data/
+*.log
+evals/fixtures/media/
+spike-output/
+
+# OS / editors
+.DS_Store
+.idea/
+.vscode/*
+!.vscode/extensions.json
+
+# Next.js generated
+next-env.d.ts

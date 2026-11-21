@@ -1,0 +1,5 @@
+pnpm-lock.yaml
+services/
+**/drizzle/meta/
+dist/
+coverage/

@@ -1,0 +1,13 @@
+Welcome back to the engineering deep dive. Today I want to talk about three things: when microservices actually make sense, why retrieval augmented generation is not a silver bullet, and how we cut our cloud bill by forty percent last quarter.
+
+Let's start with microservices. Most teams adopt them far too early. If you have one team of eight engineers, a modular monolith will almost always serve you better. You get one deployment, one database, and transactions that just work. The moment you split into services, every function call becomes a network call, and every network call can fail. My first recommendation is simple: start with a modular monolith, and enforce boundaries between modules with tooling, not with good intentions.
+
+When should you split? Split when a module has a genuinely different scaling profile, or when a separate team needs to deploy it independently. For example, our video transcoding workers need GPUs, while our API needs cheap CPU instances. That is a real reason to separate them. Wanting to use a new framework is not.
+
+Now, retrieval augmented generation. Everyone is building RAG systems right now, and many of them are disappointing. The problem is rarely the language model. The problem is retrieval. If the right passage never reaches the model, no amount of prompt engineering will save you. My second recommendation is to measure retrieval separately. Build a small evaluation set of questions with known answers, and track recall at ten before you ever look at the generated text.
+
+There are three arguments I hear against RAG. The first is that long context windows make it unnecessary. In practice, long contexts are slow, expensive, and models still miss details buried in the middle. The second argument is that fine tuning is better. Fine tuning teaches style and format well, but it is a poor way to inject facts that change every week. The third argument is that RAG hallucinates anyway. That is partly true, which is why every answer should cite its sources, and why you should verify that the cited passage actually supports the claim.
+
+Finally, cost. Last quarter we reduced our cloud spending by forty percent. Half of the savings came from one change: we scaled our GPU workers to zero when the queue was empty. The rest came from moving old media files to cheaper storage tiers after thirty days, and from right sizing our database instance, which had been massively over provisioned since launch.
+
+So, to summarize the three recommendations. One, start with a modular monolith and split only for real scaling or team reasons. Two, evaluate retrieval on its own before blaming the model. Three, make idle infrastructure cost nothing by scaling to zero. Thanks for watching, and see you in the next episode.
