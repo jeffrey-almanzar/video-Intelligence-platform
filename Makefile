@@ -6,7 +6,7 @@ WITH_ENV := set -a && source ./.env && set +a &&
 OLLAMA_MODELS := qwen3:4b qwen3:8b qwen3-vl:4b qwen3-embedding:0.6b
 
 .DEFAULT_GOAL := help
-.PHONY: help setup env infra up down reset ps logs migrate api ai ai-api ai-worker web models obs \
+.PHONY: help setup env infra up down reset ps logs migrate api ai ai-api ai-worker web models obs upload contracts \
         test test-integration lint typecheck check spike-queue spike-inference
 
 help: ## Show available targets
@@ -22,6 +22,7 @@ setup: env ## Install all dependencies (pnpm + uv)
 infra: env ## Start Postgres, Redis and S3 storage (Docker)
 	$(COMPOSE) up -d --wait postgres redis storage
 	$(COMPOSE) up storage-init
+	cd apps/api && node --env-file=../../.env scripts/storage-setup.ts
 
 up: infra ## Start infra + run migrations + NestJS API container
 	$(COMPOSE) --profile api up -d --build --wait api
@@ -85,6 +86,13 @@ typecheck: ## Static type checks
 	cd services/ai && uv run mypy
 
 check: lint typecheck test ## Everything CI runs without services
+	pnpm --filter @vip/contracts check
+
+upload: ## Upload a video through the API and follow processing: make upload FILE=path/to/video.mp4
+	cd apps/api && node scripts/upload.ts $(abspath $(FILE))
+
+contracts: ## Regenerate TS + Pydantic contracts from packages/contracts
+	pnpm --filter @vip/contracts generate
 
 spike-queue: ## Spike A: Node→Python BullMQ scenarios (needs `make infra` + `make ai-worker`)
 	cd apps/api && node --env-file=../../.env scripts/spikes/queue-producer.ts

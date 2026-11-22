@@ -1,7 +1,7 @@
 import { InvalidEnvironmentError, parseEnv } from './env.js';
 
 const valid = {
-  DATABASE_URL: 'postgres://u:p@localhost:5432/db',
+  API_DATABASE_URL: 'postgres://u:p@localhost:5432/db',
   REDIS_URL: 'redis://localhost:6379',
   S3_REGION: 'us-east-1',
   S3_BUCKET: 'vip-media',
@@ -20,6 +20,11 @@ describe('parseEnv', () => {
     expect(env.HEALTH_CHECK_TIMEOUT_MS).toBe(2000);
   });
 
+  it('parses comma-separated CORS origins', () => {
+    const env = parseEnv({ ...valid, CORS_ALLOWED_ORIGINS: 'http://a.test, http://b.test,' });
+    expect(env.CORS_ALLOWED_ORIGINS).toEqual(['http://a.test', 'http://b.test']);
+  });
+
   it('treats empty strings as unset', () => {
     const env = parseEnv({ ...valid, S3_ENDPOINT: '', LOG_LEVEL: '' });
     expect(env.S3_ENDPOINT).toBeUndefined();
@@ -27,14 +32,14 @@ describe('parseEnv', () => {
   });
 
   it('reports every invalid or missing variable at once', () => {
-    const { DATABASE_URL: _omit, ...missingDb } = valid;
+    const { API_DATABASE_URL: _omit, ...missingDb } = valid;
     try {
       parseEnv({ ...missingDb, REDIS_URL: 'http://wrong-scheme', AI_SERVICE_TOKEN: 'short' });
       expect.unreachable();
     } catch (error) {
       expect(error).toBeInstanceOf(InvalidEnvironmentError);
       const message = (error as Error).message;
-      expect(message).toContain('DATABASE_URL');
+      expect(message).toContain('API_DATABASE_URL');
       expect(message).toContain('REDIS_URL');
       expect(message).toContain('AI_SERVICE_TOKEN');
     }

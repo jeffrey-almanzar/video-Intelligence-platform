@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://vip.local/contracts/stage-job.schema.json",
+  "title": "StageJobPayload",
+  "description": "BullMQ job data for one pipeline stage run. Produced by NestJS (first stage, retries, reconciler) and by Python workers (next stage).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "processingJobId", "videoId", "stage", "run"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "processingJobId": { "type": "string", "format": "uuid" },
+    "videoId": { "type": "string", "format": "uuid" },
+    "stage": { "$ref": "#/$defs/StageName" },
+    "run": {
+      "description": "Stage run number: 1 initially, incremented by a manual retry. Part of the BullMQ jobId.",
+      "type": "integer",
+      "minimum": 1
+    },
+    "traceparent": {
+      "description": "W3C trace context, so one trace spans API -> queue -> every stage.",
+      "type": "string"
+    }
+  },
+  "$defs": {
+    "StageName": {
+      "type": "string",
+      "enum": [
+        "probe",
+        "extract_media",
+        "detect_scenes",
+        "transcribe",
+        "analyze_frames",
+        "analyze_transcript",
+        "embed",
+        "finalize"
+      ]
+    }
+  }
+}

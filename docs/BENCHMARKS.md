@@ -91,3 +91,25 @@ So the realistic local end-to-end target is **roughly 20–30 minutes per 2-hour
 
 - macOS `say` hung indefinitely when writing AIFF on macOS 26. Writing WAV directly (`--file-format=WAVE --data-format=LEI16@16000`) works.
 - Homebrew's FFmpeg 9 is built without the `drawtext` filter. The test slide is rendered with Pillow instead. The pipeline doesn't need `drawtext`.
+
+---
+
+## Phase 2: ingestion pipeline
+
+**Reproduce:** `make up && make ai-worker`, then `make upload FILE=.data/fixtures/large.mp4`. Generate the fixture with:
+`ffmpeg -f lavfi -i testsrc2=size=1920x1080:rate=30:duration=600 -f lavfi -i sine=frequency=330:duration=600 -c:v libx264 -preset ultrafast -b:v 26M -maxrate 26M -bufsize 52M -pix_fmt yuv420p -c:a aac -b:a 128k large.mp4`
+
+**Input:** a 10-minute 1080p30 H.264/AAC MP4, **1,961,875,692 bytes** (synthetic `testsrc2`, so it has no real scene cuts). API in Docker, worker native, storage on SeaweedFS in Docker, all on one machine. Measured 2026-11-22.
+
+| Step                                                      | Time                    | Notes                                                                                                                |
+| --------------------------------------------------------- | ----------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| Upload (117 × 16 MiB parts, 4 in parallel, presigned PUT) | 53.8 s → **34.8 MiB/s** | Loopback into the Docker VM; real networks will be the bottleneck                                                    |
+| `probe`                                                   | 13.0 s                  | Mostly streaming 1.96 GB out of storage with SHA-256 hashing; ffprobe itself is under 1 s                            |
+| `extract_media`                                           | 2.6 s                   | 16 kHz mono FLAC (18.9 MB). No proxy needed (H.264)                                                                  |
+| `detect_scenes`                                           | 11.7 s                  | PySceneDetect AdaptiveDetector with auto-downscale: about **51× real time** for 1080p30. Synthetic content → 1 scene |
+| `finalize`                                                | < 0.01 s                |                                                                                                                      |
+| **Processing total**                                      | **27.5 s** after upload | For 10 minutes of video                                                                                              |
+
+**Crash recovery** (`kill -9` on the worker 5 s into `probe`, restarted 2 s later): the job was redelivered about 70 s after the kill. That's bounded by `lockDuration` (30 s) plus `stalledInterval` (30 s), as predicted in Spike A. Probe succeeded on attempt 2, and the run completed with no duplicate rows.
+
+⚠️ Scene detection on real footage (more cuts, more keyframe extraction) and longer videos will take longer. Phase 3 benchmarks use real recordings.

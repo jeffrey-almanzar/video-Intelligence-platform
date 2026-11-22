@@ -6,16 +6,20 @@ readme = "README.md"
 # Pinned to 3.12: ML wheels (MLX, ctranslate2, torch) lag new Python releases (ADR-019).
 requires-python = ">=3.12,<3.13"
 dependencies = [
+    "boto3>=1.44.9",
     "bullmq>=3.6.3",
     "fastapi>=0.165.0",
     "httpx>=0.28.1",
     "opentelemetry-exporter-otlp-proto-http>=1.45.2",
     "opentelemetry-instrumentation-fastapi>=0.66b2",
     "opentelemetry-sdk>=1.45.2",
+    "pillow>=13.0.0",
+    "psycopg-pool>=3.3.3",
     "psycopg[binary]>=3.3.9",
     "pydantic>=2.14.4",
     "pydantic-settings>=2.16.3",
     "redis>=8.1.0",
+    "scenedetect[opencv-headless]>=0.7.3",
     "structlog>=26.1.0",
     "uvicorn[standard]>=0.54.0",
 ]
@@ -30,8 +34,8 @@ build-backend = "uv_build"
 
 [dependency-groups]
 dev = [
+    "datamodel-code-generator>=0.100.0",
     "mypy>=2.4.1",
-    "pillow>=13.0.0",
     "pytest>=9.2.0",
     "pytest-asyncio>=1.5.0",
     "ruff>=0.17.6",
@@ -47,14 +51,17 @@ default-groups = ["dev", "ml"]
 [tool.ruff]
 line-length = 100
 target-version = "py312"
+# Generated from packages/contracts (checked for staleness in CI instead).
+extend-exclude = ["src/vip_ai/contracts"]
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "B", "UP", "ASYNC", "S", "RUF", "SIM", "PT"]
-ignore = []
+# E501: the formatter wraps code; long SQL string literals stay readable on one line.
+ignore = ["E501"]
 
 [tool.ruff.lint.per-file-ignores]
 "scripts/**" = ["S", "T20", "E501"] # one-off spike scripts
-"tests/**" = ["S101", "S105", "S106"] # asserts and fake test credentials
+"tests/**" = ["S101", "S105", "S106", "S603", "S607"] # asserts, fake credentials, ffmpeg fixtures
 
 [tool.mypy]
 python_version = "3.12"
@@ -63,7 +70,7 @@ packages = ["vip_ai"]
 mypy_path = "src"
 
 [[tool.mypy.overrides]]
-module = ["bullmq.*", "mlx_whisper.*"]
+module = ["bullmq.*", "mlx_whisper.*", "boto3.*", "botocore.*", "scenedetect.*"]
 ignore_missing_imports = true
 
 [tool.pytest.ini_options]

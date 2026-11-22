@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://vip.local/contracts/progress-event.schema.json",
+  "title": "ProgressEvent",
+  "description": "Published by Python workers on the Redis channel `video:{videoId}:events`; forwarded to browsers over SSE by NestJS. Best-effort: Postgres stays the source of truth.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "type", "videoId", "processingJobId", "at"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "type": {
+      "type": "string",
+      "enum": [
+        "stage.started",
+        "stage.progress",
+        "stage.succeeded",
+        "stage.failed",
+        "job.succeeded",
+        "job.failed",
+        "job.cancelled"
+      ]
+    },
+    "videoId": { "type": "string", "format": "uuid" },
+    "processingJobId": { "type": "string", "format": "uuid" },
+    "stage": { "$ref": "stage-job.schema.json#/$defs/StageName" },
+    "progress": { "type": "integer", "minimum": 0, "maximum": 100 },
+    "errorCode": { "type": "string" },
+    "message": { "type": "string" },
+    "at": { "type": "string", "format": "date-time" }
+  }
+}

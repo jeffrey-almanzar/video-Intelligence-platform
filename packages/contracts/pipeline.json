@@ -1,0 +1,10 @@
+{
+  "$comment": "Single source of truth for pipeline stage order and queue routing (ADR-006, ADR-016). Run `pnpm --filter @vip/contracts generate` after editing.",
+  "version": "2026.11.2",
+  "stages": [
+    { "name": "probe", "queue": "vip-media", "attempts": 3, "backoffMs": 2000 },
+    { "name": "extract_media", "queue": "vip-media", "attempts": 3, "backoffMs": 5000 },
+    { "name": "detect_scenes", "queue": "vip-media", "attempts": 3, "backoffMs": 5000 },
+    { "name": "finalize", "queue": "vip-media", "attempts": 5, "backoffMs": 2000 }
+  ]
+}

@@ -295,3 +295,18 @@ Exact Ollama tags and quantizations are verified when pulled in Phase 1, because
 **Decision.** Follow the NestJS 12 defaults: ESM (`"type": "module"`, `.js` import suffixes), **TypeScript 6** (`tsc` with `emitDecoratorMetadata`, which Nest DI needs), Vitest for unit and integration tests, and oxlint for linting. Validation and config use **Zod 4**. TypeScript 7 is deferred until Nest officially supports it.
 
 **Consequences.** Faster tests and linting. The `eslint-plugin-boundaries` module-boundary rule from ADR-002 has no oxlint equivalent yet. Boundaries will be enforced in Phase 2 with a small dependency-cruiser rule or a Vitest architecture test once there is more than one feature module.
+
+---
+
+## ADR-022: Phase 2 implementation decisions
+
+Decisions made while building ingestion. Each one came from a measured problem or a simpler option.
+
+1. **Python uses psycopg 3 with explicit SQL, not SQLAlchemy Core** (amends ADR-011). The AI service writes a handful of tables through guarded `UPDATE ... WHERE status IN (...)` statements. Plain parameterized SQL in one module (`vip_ai/pipeline/repository.py`) is shorter and easier to review than a parallel table model. Schema drift is caught by the integration tests, which run against the real migrated schema with the restricted `vip_ai` role.
+2. **Presigning uses its own S3 client with a browser-facing endpoint** (`S3_PUBLIC_ENDPOINT`). Presigned URLs sign the host, and the containerized API reaches storage under a Docker-internal name.
+3. **SDK request checksums are only sent when required.** With the AWS SDK's default (`WHEN_SUPPORTED`), presigned `UploadPart` URLs embed the CRC32 of an empty body, so every real part fails with `BadDigest`. That's reproducible on SeaweedFS and documented AWS behavior.
+4. **The BullMQ key prefix is configurable (`QUEUE_PREFIX`).** Integration tests use `bull-test`, so a worker running locally never consumes test jobs. Without this, the first test run's random-byte uploads were processed (and correctly failed) by the dev worker.
+5. **Scene detection uses AdaptiveDetector.** ContentDetector's fixed threshold (27) missed a real cut scoring 20.4 between two shots of similar brightness and saturation.
+6. **ASR audio is 16 kHz mono FLAC:** lossless, the format Whisper wants, about half the size of WAV.
+7. **Auth is a guard seam with a seeded dev user** (per the approved plan). It is active only outside `NODE_ENV=production`, and fails closed in production. Pretty logging is a separate `LOG_PRETTY` flag, so the local Docker stack can run as development with JSON logs.
+8. **SeaweedFS runs with explicit capacity flags.** Its default (`-volume.max=0`) sized capacity from free disk at boot, and it came up with zero writable volumes after starting on a full disk. ADR-020's open items are verified: multipart upload, presigned parts, CORS and lifecycle rules all work.
