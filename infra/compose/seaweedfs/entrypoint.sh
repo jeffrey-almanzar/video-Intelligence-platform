@@ -15,4 +15,8 @@ cat > /tmp/s3.json <<JSON
   ]
 }
 JSON
-exec weed server -dir=/data -ip.bind=0.0.0.0 -volume.max=0 -s3 -s3.port=8333 -s3.config=/tmp/s3.json
+# Explicit limits: the default (-volume.max=0) sizes capacity from free disk at boot, which
+# left zero writable volumes when Docker's disk was full. 1 GB volumes x 100 = up to 100 GB.
+exec weed server -dir=/data -ip.bind=0.0.0.0 \
+  -master.volumeSizeLimitMB=1024 -volume.max=100 \
+  -s3 -s3.port=8333 -s3.config=/tmp/s3.json

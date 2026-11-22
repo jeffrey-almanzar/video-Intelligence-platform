@@ -1,6 +1,6 @@
 # Database Schema (Initial Proposal)
 
-Status: **Proposed**. PostgreSQL 16 with the `pgvector`, `citext` and `pgcrypto` extensions.
+Status: **Phase 2 tables implemented** (see §7 for how the implementation differs from this proposal). PostgreSQL 16 with the `pgvector`, `citext` and `pgcrypto` extensions.
 
 The schema will be implemented as Drizzle definitions with generated SQL migrations (ADR-011). The DDL below is the reviewable intent. Exact column types may change slightly during implementation, and tables arrive in the phase that needs them (see the last section).
 
@@ -500,3 +500,18 @@ Grants are column-level where Python updates NestJS-owned rows, so the boundary 
 | 6     | `transcript_chunks`, `frame_analyses`                                                                                      |
 
 \* Auth could arrive in Phase 2 or be deferred, with a seeded dev user, until Phase 5. See the roadmap's open questions.
+
+---
+
+## 7. Implementation notes (Phase 2)
+
+The source of truth is now `apps/api/src/db/schema/index.ts` plus the SQL in `apps/api/drizzle/`. Differences from the proposal above:
+
+| Change                                                                                                               | Reason                                                                                                                                |
+| -------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| `users.password_hash` is nullable                                                                                    | Auth is deferred to Phase 5. A null hash can never authenticate. `refresh_tokens` arrives with auth                                   |
+| `processing_stages` gained `position`, `run` and `attempt`                                                           | `position` orders stages. `run` increments on manual retry and is part of the BullMQ job id. `attempt` counts deliveries within a run |
+| `media_assets` gained `content_type`                                                                                 | Needed to serve artifacts with the right type                                                                                         |
+| Group roles are `vip_api_rw` / `vip_ai_rw` (NOLOGIN), with login users `vip_api` / `vip_ai` attached by `db:migrate` | Passwords come from the environment, never from migrations. Grants are in `0002_ownership_roles.sql`                                  |
+| `vip_api_rw` may also update a few `processing_stages` columns                                                       | The reconciler repairs stages whose worker died, and retry resets a failed stage                                                      |
+| `videos_status_idx` not created yet                                                                                  | No query uses it yet; it gets added together with the first query that needs it                                                       |

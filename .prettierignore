@@ -3,3 +3,4 @@ services/
 **/drizzle/meta/
 dist/
 coverage/
+apps/api/src/contracts/generated/

@@ -8,6 +8,20 @@
       "when": 1795280008770,
       "tag": "0000_enable_extensions",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1795376369107,
+      "tag": "0001_ingestion_schema",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1795376383969,
+      "tag": "0002_ownership_roles",
+      "breakpoints": true
     }
   ]
 }

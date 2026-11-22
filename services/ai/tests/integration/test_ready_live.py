@@ -1,4 +1,4 @@
-"""Readiness against real Postgres, Redis and Ollama. Run with: uv run pytest -m integration"""
+"""Readiness against real Postgres, Redis and Ollama (local only: CI runs `-m "integration and not ollama"`)."""
 
 import pytest
 from fastapi.testclient import TestClient
@@ -6,7 +6,7 @@ from fastapi.testclient import TestClient
 from vip_ai.api.app import create_app
 from vip_ai.config import Settings
 
-pytestmark = pytest.mark.integration
+pytestmark = [pytest.mark.integration, pytest.mark.ollama]
 
 
 def test_ready_with_real_dependencies() -> None:

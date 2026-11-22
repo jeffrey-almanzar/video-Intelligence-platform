@@ -8,17 +8,25 @@ from pydantic import Field, PostgresDsn, RedisDsn, SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
+def _repo_root() -> Path | None:
+    """The monorepo root (found via the workspace marker file), or None outside the repo."""
+    for parent in Path(__file__).resolve().parents:
+        if (parent / "pnpm-workspace.yaml").is_file():
+            return parent
+    return None
+
+
 def _repo_env_file() -> Path | None:
-    """The monorepo's .env for local development, found via the workspace marker file.
+    """The monorepo's .env for local development.
 
     Returns None outside the repo (containers, CI), where configuration comes only from the
     real environment.
     """
-    for parent in Path(__file__).resolve().parents:
-        if (parent / "pnpm-workspace.yaml").is_file():
-            env = parent / ".env"
-            return env if env.is_file() else None
-    return None
+    root = _repo_root()
+    if root is None:
+        return None
+    env = root / ".env"
+    return env if env.is_file() else None
 
 
 _REPO_ROOT_ENV = _repo_env_file()
@@ -31,6 +39,7 @@ class Settings(BaseSettings):
         extra="ignore",
         # Treat `KEY=` in .env as unset so defaults apply.
         env_ignore_empty=True,
+        populate_by_name=True,
     )
 
     environment: Literal["development", "test", "production"] = Field(
@@ -38,8 +47,16 @@ class Settings(BaseSettings):
     )
     log_level: Literal["debug", "info", "warning", "error"] = "info"
 
-    database_url: PostgresDsn
+    # Least-privilege login user for the AI service (ADR-003).
+    database_url: PostgresDsn = Field(alias="AI_DATABASE_URL")
     redis_url: RedisDsn
+
+    s3_endpoint: str | None = None
+    s3_region: str = "us-east-1"
+    s3_bucket: str = "vip-media"
+    s3_access_key_id: str | None = None
+    s3_secret_access_key: SecretStr | None = None
+    s3_force_path_style: bool = False
 
     ai_api_host: str = "127.0.0.1"
     ai_api_port: int = Field(8000, ge=1, le=65535)
@@ -49,7 +66,22 @@ class Settings(BaseSettings):
 
     health_check_timeout_s: float = Field(2.0, gt=0)
 
+    # --- pipeline
+    queue_prefix: str = Field("bull", pattern=r"^[a-z0-9-]+$")
+    work_dir: Path = Path(".data/work")
+    max_duration_seconds: int = Field(4 * 3600, gt=0)
+    max_keyframes_per_hour: int = Field(120, gt=0)
+    media_worker_concurrency: int = Field(1, ge=1, le=16)
+    stage_heartbeat_interval_s: float = Field(10.0, gt=0)
+
     otel_exporter_otlp_endpoint: str | None = None
+
+    @property
+    def resolved_work_dir(self) -> Path:
+        """Relative WORK_DIR values are anchored at the repo root locally (not the cwd)."""
+        if self.work_dir.is_absolute():
+            return self.work_dir
+        return (_repo_root() or Path.cwd()) / self.work_dir
 
 
 @lru_cache

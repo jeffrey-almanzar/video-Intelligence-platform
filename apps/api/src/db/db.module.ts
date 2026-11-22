@@ -17,7 +17,7 @@ export type Database = NodePgDatabase<typeof schema>;
       inject: [ENV],
       useFactory: (env: Env) =>
         new pg.Pool({
-          connectionString: env.DATABASE_URL,
+          connectionString: env.API_DATABASE_URL,
           max: 10,
           connectionTimeoutMillis: 5_000,
           idleTimeoutMillis: 30_000,

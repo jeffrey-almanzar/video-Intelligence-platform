@@ -57,6 +57,8 @@ Both should report `"status":"ok"`. The API reports `degraded` (HTTP 200) while 
 | Task                                           | Command                                                                                                                     |
 | ---------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
 | API with hot reload (instead of the container) | `make infra && make migrate && make api`                                                                                    |
+| Upload a video and follow processing           | `make upload FILE=path/to/video.mp4` (needs `make up` + `make ai`)                                                          |
+| Regenerate cross-language contracts            | `make contracts` (after editing `packages/contracts`)                                                                       |
 | Run unit tests / lint / types (what CI runs)   | `make check`                                                                                                                |
 | Integration tests (needs infra + Ollama)       | `make test-integration`                                                                                                     |
 | Stop containers (keep data)                    | `make down`                                                                                                                 |
@@ -84,7 +86,15 @@ Both should report `"status":"ok"`. The API reports `degraded` (HTTP 200) while 
 - Start the observability stack only when you need it (~1 GB).
 - Browsers with many tabs plus an IDE can easily take 4–6 GB. Expect swapping if you run `qwen3:8b` alongside a heavy desktop session.
 
-## 6. Troubleshooting
+## 6. Database users
+
+`make migrate` (and the compose `migrate` service) applies migrations as the schema owner, then creates the two least-privilege service logins from `API_DATABASE_URL` and `AI_DATABASE_URL`, and seeds the dev user. Connect as the owner for ad-hoc queries:
+
+```bash
+docker exec -it vip-postgres-1 psql -U vip -d vip
+```
+
+## 7. Troubleshooting
 
 | Symptom                                     | Fix                                                                                                             |
 | ------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |

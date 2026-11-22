@@ -55,7 +55,9 @@ Deviations: SeaweedFS replaces MinIO (ADR-020); the module-boundary lint rule mo
 
 ---
 
-## Phase 2: Video ingestion
+## Phase 2: Video ingestion ✅ (completed 2026-11-22)
+
+Details, decisions and exit-criteria results: [phases/PHASE_2_INGESTION.md](phases/PHASE_2_INGESTION.md).
 
 **What:** upload a large video reliably, validate it, and run the first deterministic pipeline stages in the background with visible status.
 

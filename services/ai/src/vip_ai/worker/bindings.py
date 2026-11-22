@@ -19,9 +19,10 @@ class QueueBinding:
     stalled_interval_ms: int = 30_000
     max_stalled_count: int = 1
 
-    def worker_opts(self, redis_url: str) -> dict[str, Any]:
+    def worker_opts(self, redis_url: str, prefix: str = "bull") -> dict[str, Any]:
         return {
             "connection": redis_url,
+            "prefix": prefix,
             "concurrency": self.concurrency,
             "lockDuration": self.lock_duration_ms,
             "stalledInterval": self.stalled_interval_ms,
