@@ -64,9 +64,10 @@ class StageContext:
             progress=pct,
         )
 
-    def output_prefix(self) -> str:
-        """Deterministic storage prefix for this stage's artifacts (reruns overwrite)."""
-        return f"videos/{self.video.id}/jobs/{self.job_id}/{self.stage}"
+    def output_prefix(self, stage: str | None = None) -> str:
+        """Deterministic storage prefix for a stage's artifacts (reruns overwrite).
+        Pass another stage's name to locate its outputs."""
+        return f"videos/{self.video.id}/jobs/{self.job_id}/{stage or self.stage}"
 
 
 async def _noop(_: AsyncConnection[Any]) -> None:

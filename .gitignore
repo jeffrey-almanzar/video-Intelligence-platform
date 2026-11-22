@@ -23,7 +23,7 @@ coverage/
 # local data / artifacts
 .data/
 *.log
-evals/fixtures/media/
+evals/fixtures/
 spike-output/
 
 # OS / editors

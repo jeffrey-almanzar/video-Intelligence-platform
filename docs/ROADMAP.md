@@ -82,7 +82,9 @@ Details, decisions and exit-criteria results: [phases/PHASE_2_INGESTION.md](phas
 
 ---
 
-## Phase 3: Transcription
+## Phase 3: Transcription ✅ (completed 2026-11-22)
+
+Details, measurements and exit-criteria results: [phases/PHASE_3_TRANSCRIPTION.md](phases/PHASE_3_TRANSCRIPTION.md).
 
 | Deliverable             | Detail                                                                                                            |
 | ----------------------- | ----------------------------------------------------------------------------------------------------------------- |

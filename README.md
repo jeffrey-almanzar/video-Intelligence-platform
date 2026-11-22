@@ -16,7 +16,7 @@ The project is also a deliberate engineering exercise. It is meant to show **str
 | 1     | Foundation (repo, Docker Compose, NestJS, FastAPI, health checks, spikes)         | ✅ Done                |
 | 2–7   | Ingestion → Transcription → AI Intelligence → Frontend → Advanced AI → Production | ⏳ Not started         |
 
-Phase 1 delivered the running skeleton: infrastructure, API and AI service health checks, CI, and two spikes that validated the cross-language queue and local inference ([docs/BENCHMARKS.md](docs/BENCHMARKS.md)). Phase 2 added video ingestion: upload a video with `make upload FILE=...` and watch it get processed. See [docs/ROADMAP.md](docs/ROADMAP.md).
+Phase 1 delivered the running skeleton: infrastructure, API and AI service health checks, CI, and two spikes that validated the cross-language queue and local inference ([docs/BENCHMARKS.md](docs/BENCHMARKS.md)). Phase 2 added video ingestion and Phase 3 added transcription: upload a video with `make upload FILE=...`, watch it get processed, and read its transcript at `/v1/videos/:id/transcript`. See [docs/ROADMAP.md](docs/ROADMAP.md).
 
 ---
 

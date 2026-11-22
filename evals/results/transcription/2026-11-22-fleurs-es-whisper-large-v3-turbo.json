@@ -1,0 +1,101 @@
+{
+  "dataset": "fleurs-es",
+  "language": "es",
+  "utterances": 150,
+  "audio_minutes": 29.9,
+  "provider": "mlx-whisper",
+  "model": "mlx-community/whisper-large-v3-turbo",
+  "forced_language": false,
+  "wer": 0.0363,
+  "cer": 0.0195,
+  "errors": {
+    "substitutions": 76,
+    "deletions": 23,
+    "insertions": 41
+  },
+  "reference_words": 3852,
+  "language_detection": {
+    "es": 150
+  },
+  "decode_rtf": 0.1663,
+  "wall_seconds": 310.3,
+  "peak_rss_mb": 1863.8,
+  "machine": {
+    "platform": "macOS-26.6.2-arm64-arm-64bit",
+    "processor": "arm"
+  },
+  "date": "2026-11-22T21:26:43+00:00",
+  "normalization": "whisper BasicTextNormalizer",
+  "worst_items": [
+    {
+      "id": "1748-10931675615482490825.wav",
+      "wer": 0.3333,
+      "reference": "Los equipos de rescate antincendios lograron extinguir el fuego a las 11:35 p. m.",
+      "hypothesis": "Los equipos de rescate anti incendios lograron extinguir el fuego a las 11 y 35 pm.",
+      "language": "es"
+    },
+    {
+      "id": "1748-16282454599824569244.wav",
+      "wer": 0.2667,
+      "reference": "Los equipos de rescate antincendios lograron extinguir el fuego a las 11:35 p. m.",
+      "hypothesis": "Los equipos de rescate ante incendios lograron extinguir el fuego a las 11.35 pm.",
+      "language": "es"
+    },
+    {
+      "id": "1748-7925448969135716002.wav",
+      "wer": 0.2667,
+      "reference": "Los equipos de rescate antincendios lograron extinguir el fuego a las 11:35 p. m.",
+      "hypothesis": "Los equipos de rescate ante incendios lograron extinguir el fuego a las 11.35 pm.",
+      "language": "es"
+    },
+    {
+      "id": "1680-9325951061244714369.wav",
+      "wer": 0.2609,
+      "reference": "Atleta integral, el tigre tiene la habilidad de trepar (pero no demasiado bien), nadar, dar extensos saltos y jalar cinco veces más fuerte que una persona robusta.",
+      "hypothesis": "Atleta integral, el tigre tiene la habilidad de tripar, pero no demasiado bien, nadar, dar extensos saltos y jalar 5 veces más fuerte que una persona robusta.",
+      "language": "es"
+    },
+    {
+      "id": "1902-3403486107983659935.wav",
+      "wer": 0.2308,
+      "reference": "En un principio, se lo trasladó al Hospital James Paget de Great Yarmouth.",
+      "hypothesis": "En un principio se lo trasladó al hospital James Patch Head de Great Sharmouth.",
+      "language": "es"
+    },
+    {
+      "id": "1680-4698639752815970174.wav",
+      "wer": 0.2174,
+      "reference": "Atleta integral, el tigre tiene la habilidad de trepar (pero no demasiado bien), nadar, dar extensos saltos y jalar cinco veces más fuerte que una persona robusta.",
+      "hypothesis": "Atleta integral. El tigre tiene la habilidad de trepar, pero no demasiado bien. Nadar, dar extensos saltos y jalar 5 veces más fuerte que una persona robusta.",
+      "language": "es"
+    },
+    {
+      "id": "1680-5169145406874101304.wav",
+      "wer": 0.2174,
+      "reference": "Atleta integral, el tigre tiene la habilidad de trepar (pero no demasiado bien), nadar, dar extensos saltos y jalar cinco veces más fuerte que una persona robusta.",
+      "hypothesis": "Atleta integral, el tigre tiene la habilidad de trepar, pero no demasiado bien, nadar, dar extensos saltos y jalar 5 veces más fuerte que una persona robusta.",
+      "language": "es"
+    },
+    {
+      "id": "2005-17235186473689871579.wav",
+      "wer": 0.2,
+      "reference": "Sin embargo, hay muchas características en las aves que todavía las asemejan a los dinosaurios.",
+      "hypothesis": "Sin embargo, hay muchas características en las aves que todavía se asemejan a las de los dinosaurios.",
+      "language": "es"
+    },
+    {
+      "id": "1842-17736040977613383649.wav",
+      "wer": 0.1875,
+      "reference": "Dado que el plumaje de los dinosaurios no tiene un eje bien desarrollado, denominado raquis, pero sí presenta otros rasgos de las plumas (cerdas y bárbulas), los investigadores llegaron a la conclusión de que es probable que el raquis sea el resultado de un desarrollo evolutivo posterior de estas otras características.",
+      "hypothesis": "dado que el plumaje de los dinosaurios no tiene un eje bien desarrollado denominado raquis pero si presenta otros lagos de las plumas cerdas y bábulas los investigadores llegaron a la conclusión de que es probable que raquí sea resultado de un desarrollo evolutivo posterior de otras características",
+      "language": "es"
+    },
+    {
+      "id": "1779-6228421468350475548.wav",
+      "wer": 0.15,
+      "reference": "El anuncio se hizo tras la conversación telefónica que Trump mantuvo con con el presidente de Turquía, Recep Tayyip Erdoğan.",
+      "hypothesis": "El anuncio se hizo tras la conversación telefónica que Trump tuvo con el presidente de Turquía, Recep Tayyip Endorgan.",
+      "language": "es"
+    }
+  ]
+}

@@ -73,6 +73,16 @@ class Settings(BaseSettings):
     max_keyframes_per_hour: int = Field(120, gt=0)
     media_worker_concurrency: int = Field(1, ge=1, le=16)
     stage_heartbeat_interval_s: float = Field(10.0, gt=0)
+    gpu_worker_concurrency: int = Field(1, ge=1, le=4)
+
+    # --- transcription (ADR-004, ADR-010)
+    #: auto = MLX on Apple Silicon, faster-whisper elsewhere.
+    transcription_provider: Literal["auto", "mlx", "faster-whisper"] = "auto"
+    #: Model id for the chosen provider; None = provider default (large-v3-turbo).
+    whisper_model: str | None = None
+    #: Force a language (ISO 639-1) instead of auto-detecting it.
+    transcription_language: str | None = None
+    transcription_window_s: float = Field(600.0, ge=30)
 
     otel_exporter_otlp_endpoint: str | None = None
 

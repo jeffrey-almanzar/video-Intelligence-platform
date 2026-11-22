@@ -124,6 +124,7 @@ describe('Videos, uploads and processing (integration)', () => {
       'probe',
       'extract_media',
       'detect_scenes',
+      'transcribe',
       'finalize',
     ]);
     expect(await queue.state(res.body.job.id, 'probe', 1)).toBe('waiting');
@@ -280,6 +281,75 @@ describe('Videos, uploads and processing (integration)', () => {
     expect(received).toContain('event: progress');
     controller.abort();
     await publisher.quit();
+  });
+
+  it('serves the published transcript with time filters and keyset paging', async () => {
+    const { videoId, jobId } = await uploadedVideo();
+    await http.get(`/v1/videos/${videoId}/transcript`).expect(404); // not processed yet
+
+    // Arrange what the worker would have written, then publish the job (as finalize does).
+    const transcriptId = uuidv7();
+    await owner.query(
+      `INSERT INTO transcripts (id, job_id, video_id, language, provider, model, segment_count, word_count)
+       VALUES ($1, $2, $3, 'en', 'mlx-whisper', 'large-v3-turbo', 4, 16)`,
+      [transcriptId, jobId, videoId],
+    );
+    const rows: [number, number, number][] = [
+      [0, 0, 5000],
+      [1, 5000, 12000],
+      [2, 15000, 20000],
+      [3, 20000, 26000],
+    ];
+    for (const [idx, start, end] of rows) {
+      await owner.query(
+        `INSERT INTO transcript_segments (transcript_id, idx, start_ms, end_ms, text, words)
+         VALUES ($1, $2, $3, $4, $5, $6)`,
+        [
+          transcriptId,
+          idx,
+          start,
+          end,
+          `segment ${idx} text`,
+          JSON.stringify([{ w: 'segment', s: start, e: start + 400, p: 0.9 }]),
+        ],
+      );
+    }
+    await owner.query(`UPDATE videos SET active_job_id = $1, status = 'ready' WHERE id = $2`, [
+      jobId,
+      videoId,
+    ]);
+
+    const all = await http.get(`/v1/videos/${videoId}/transcript`).expect(200);
+    expect(all.body.transcript).toMatchObject({ language: 'en', segmentCount: 4 });
+    expect(all.body.segments.map((s: { idx: number }) => s.idx)).toEqual([0, 1, 2, 3]);
+    expect(all.body.segments[0].words).toBeUndefined();
+    expect(all.body.nextCursor).toBeNull();
+
+    // Overlap semantics: [6 s, 16 s) touches segments 1 (5-12 s) and 2 (15-20 s).
+    const range = await http
+      .get(`/v1/videos/${videoId}/transcript?fromMs=6000&toMs=16000`)
+      .expect(200);
+    expect(range.body.segments.map((s: { idx: number }) => s.idx)).toEqual([1, 2]);
+
+    const page1 = await http
+      .get(`/v1/videos/${videoId}/transcript?limit=3&includeWords=true`)
+      .expect(200);
+    expect(page1.body.segments).toHaveLength(3);
+    expect(page1.body.segments[0].words[0]).toMatchObject({ w: 'segment', s: 0 });
+    expect(page1.body.nextCursor).toBe(2);
+    const page2 = await http.get(`/v1/videos/${videoId}/transcript?limit=3&afterIdx=2`).expect(200);
+    expect(page2.body.segments.map((s: { idx: number }) => s.idx)).toEqual([3]);
+
+    await http.get(`/v1/videos/${videoId}/transcript?fromMs=5000&toMs=1000`).expect(400);
+
+    // Another user's video is invisible here too.
+    const stranger = uuidv7();
+    await owner.query(`INSERT INTO users (id, email) VALUES ($1, $2)`, [
+      stranger,
+      `${stranger}@test.local`,
+    ]);
+    await owner.query(`UPDATE videos SET owner_id = $1 WHERE id = $2`, [stranger, videoId]);
+    await http.get(`/v1/videos/${videoId}/transcript`).expect(404);
   });
 
   function queueJob(jobId: string, stage: string, run: number) {

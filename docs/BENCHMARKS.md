@@ -113,3 +113,42 @@ So the realistic local end-to-end target is **roughly 20–30 minutes per 2-hour
 **Crash recovery** (`kill -9` on the worker 5 s into `probe`, restarted 2 s later): the job was redelivered about 70 s after the kill. That's bounded by `lockDuration` (30 s) plus `stalledInterval` (30 s), as predicted in Spike A. Probe succeeded on attempt 2, and the run completed with no duplicate rows.
 
 ⚠️ Scene detection on real footage (more cuts, more keyframe extraction) and longer videos will take longer. Phase 3 benchmarks use real recordings.
+
+---
+
+## Phase 3: transcription
+
+**Setup:** MLX Whisper `large-v3-turbo` through the production pipeline (FFmpeg decode → Silero VAD → ~10-min windows → Whisper → filters → normalization). M1 Pro / 16 GB, measured 2026-11-22. Raw results: `evals/results/transcription/`.
+
+### Accuracy (WER, Whisper text normalizers, corpus-level)
+
+| Set                         | Utterances / audio           | WER       | CER   | Language detection | Reproduce                                                             |
+| --------------------------- | ---------------------------- | --------- | ----- | ------------------ | --------------------------------------------------------------------- |
+| LibriSpeech test-clean (EN) | 200 / 29.9 min / 4,721 words | **1.84%** | 0.53% | 200/200 `en`       | `uv run python scripts/eval_transcription.py librispeech --limit 200` |
+| FLEURS es_419 test (ES)     | 150 / 29.9 min / 3,852 words | **3.63%** | 1.95% | 150/150 `es`       | `uv run python scripts/eval_transcription.py fleurs-es --limit 150`   |
+
+⚠️ Both are read speech. Real talks (crosstalk, music, accents, poor microphones) will score worse.
+
+### Long-form speed and memory (real speech: concatenated LibriSpeech with 0.7 s pauses)
+
+| Audio   | Windows | Total time | RTF   | WER   | Segments (mean length) | Peak GPU (MLX) | Peak RSS |
+| ------- | ------- | ---------- | ----- | ----- | ---------------------- | -------------- | -------- |
+| 10 min  | 1       | 45.7 s     | 0.076 | 1.41% | 85 (6.4 s)             | 2.62 GB        | 1.80 GB  |
+| 60 min  | 5       | 4 min 4 s  | 0.068 | 1.80% | 541 (5.9 s)            | 2.69 GB        | 2.67 GB  |
+| 120 min | 9       | 8 min 0 s  | 0.067 | 2.29% | 1,071 (5.9 s)          | 2.69 GB        | 2.87 GB  |
+
+Timestamps were monotonic and non-overlapping in every run. VAD takes about 0.24% of the audio duration (17 s for 2 h). Memory stays flat with duration because decoding is windowed. Reproduce with `make bench-transcription`.
+
+### Why VAD regions are merged before decoding
+
+| Variant (3-min talk)                   | Clips | RTF       |
+| -------------------------------------- | ----- | --------- |
+| Raw VAD regions as `clip_timestamps`   | 21    | 0.169     |
+| Whole window, no clips                 | –     | 0.068     |
+| VAD regions merged across pauses ≤ 3 s | 1     | **0.069** |
+
+### End to end through the full stack (60-min video)
+
+Upload (29 MiB) → probe → extract → scenes → **transcribe 252.7 s** → finalize: **4 min 20 s** in total. Through `GET /v1/videos/:id/transcript`: 524 segments, contiguous ids, non-overlapping, within the duration, **WER 1.78%**.
+
+**Crash resume:** `kill -9` on the worker after 2 of the 5 windows. Attempt 2 reused both checkpoints and decoded only 3 windows (122 s). The job succeeded with a single transcript.

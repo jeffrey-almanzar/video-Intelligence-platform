@@ -8,7 +8,7 @@ export type PipelineStage = {
   readonly backoffMs: number;
 };
 
-export const PIPELINE_VERSION = "2026.11.2";
+export const PIPELINE_VERSION = "2026.11.3";
 
 export const PIPELINE_STAGES: readonly PipelineStage[] = [
   {
@@ -30,6 +30,12 @@ export const PIPELINE_STAGES: readonly PipelineStage[] = [
     'backoffMs': 5000
   },
   {
+    'name': 'transcribe',
+    'queue': 'vip-gpu',
+    'attempts': 3,
+    'backoffMs': 15000
+  },
+  {
     'name': 'finalize',
     'queue': 'vip-media',
     'attempts': 5,
@@ -37,4 +43,4 @@ export const PIPELINE_STAGES: readonly PipelineStage[] = [
   }
 ] as const;
 
-export const PIPELINE_QUEUES: readonly string[] = ['vip-media'];
+export const PIPELINE_QUEUES: readonly string[] = ['vip-media','vip-gpu'];

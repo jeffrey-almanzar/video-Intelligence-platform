@@ -10,11 +10,12 @@ class PipelineStage:
     backoff_ms: int
 
 
-PIPELINE_VERSION = "2026.11.2"
+PIPELINE_VERSION = "2026.11.3"
 
 PIPELINE_STAGES: tuple[PipelineStage, ...] = (
     PipelineStage(name="probe", queue="vip-media", attempts=3, backoff_ms=2000),
     PipelineStage(name="extract_media", queue="vip-media", attempts=3, backoff_ms=5000),
     PipelineStage(name="detect_scenes", queue="vip-media", attempts=3, backoff_ms=5000),
+    PipelineStage(name="transcribe", queue="vip-gpu", attempts=3, backoff_ms=15000),
     PipelineStage(name="finalize", queue="vip-media", attempts=5, backoff_ms=2000),
 )
