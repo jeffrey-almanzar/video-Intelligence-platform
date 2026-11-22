@@ -34,7 +34,10 @@ def build_bindings(
         q: QueueBinding(
             queue=q,
             handler=runner.handle,
-            concurrency=settings.media_worker_concurrency,
+            # GPU-class queues run one job at a time: models load sequentially (ADR-010).
+            concurrency=settings.gpu_worker_concurrency
+            if q == "vip-gpu"
+            else settings.media_worker_concurrency,
             # Long media steps renew the lock every 15 s; a crashed worker's job is
             # redelivered within ~1 minute (lock expiry + stalled check).
             lock_duration_ms=30_000,

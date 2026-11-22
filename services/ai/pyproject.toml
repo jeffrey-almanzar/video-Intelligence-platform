@@ -9,6 +9,7 @@ dependencies = [
     "boto3>=1.44.9",
     "bullmq>=3.6.3",
     "fastapi>=0.165.0",
+    "faster-whisper>=1.2.1",
     "httpx>=0.28.1",
     "opentelemetry-exporter-otlp-proto-http>=1.45.2",
     "opentelemetry-instrumentation-fastapi>=0.66b2",
@@ -35,10 +36,12 @@ build-backend = "uv_build"
 [dependency-groups]
 dev = [
     "datamodel-code-generator>=0.100.0",
+    "jiwer>=4.0.0",
     "mypy>=2.4.1",
     "pytest>=9.2.0",
     "pytest-asyncio>=1.5.0",
     "ruff>=0.17.6",
+    "whisper-normalizer>=1.0.1",
 ]
 # Apple Silicon only. Linux (CI / cloud) uses faster-whisper instead (ADR-004).
 ml = [
@@ -70,7 +73,7 @@ packages = ["vip_ai"]
 mypy_path = "src"
 
 [[tool.mypy.overrides]]
-module = ["bullmq.*", "mlx_whisper.*", "boto3.*", "botocore.*", "scenedetect.*"]
+module = ["bullmq.*", "mlx_whisper.*", "boto3.*", "botocore.*", "scenedetect.*", "faster_whisper.*", "whisper_normalizer.*", "jiwer.*"]
 ignore_missing_imports = true
 
 [tool.pytest.ini_options]

@@ -310,3 +310,24 @@ Decisions made while building ingestion. Each one came from a measured problem o
 6. **ASR audio is 16 kHz mono FLAC:** lossless, the format Whisper wants, about half the size of WAV.
 7. **Auth is a guard seam with a seeded dev user** (per the approved plan). It is active only outside `NODE_ENV=production`, and fails closed in production. Pretty logging is a separate `LOG_PRETTY` flag, so the local Docker stack can run as development with JSON logs.
 8. **SeaweedFS runs with explicit capacity flags.** Its default (`-volume.max=0`) sized capacity from free disk at boot, and it came up with zero writable volumes after starting on a full disk. ADR-020's open items are verified: multipart upload, presigned parts, CORS and lifecycle rules all work.
+
+---
+
+## ADR-023: Transcription design
+
+**Context.** Phase 3 has to turn 60–120+ minutes of audio into timestamped, citation-ready segments on a 16 GB Mac, survive crashes partway through, and produce the same results on Linux (CI, cloud), where MLX doesn't exist.
+
+**Decisions.**
+
+1. **Own `vip-gpu` queue, concurrency 1.** `transcribe` is the first model-backed stage. One job at a time on that queue means models load one after another (ADR-010), and the model is released at the end of the stage (`ModelHolder` cleared plus `mx.clear_cache()`).
+2. **VAD first, then ~10-minute windows cut in silences.** Silero VAD (the ONNX model bundled with faster-whisper; no PyTorch) finds speech, and windows close only in pauses, so no word is cut. Each window is a **checkpoint** written atomically to scratch, keyed by provider, model, bounds and language. A crash or retry resumes after the last finished window instead of re-decoding an hour of audio.
+3. **Merge VAD regions separated by ≤ 3 s before decoding.** Whisper decodes each clip in its own 30 s context. On a 3-minute talk, 21 raw VAD regions ran at RTF 0.169, against 0.069 once short pauses were merged (measured). Longer silences and music are still skipped, which is what prevents Whisper's silence hallucinations.
+4. **Decoding safeguards:** `condition_on_previous_text=False` (no repetition loops), fallback temperatures, Whisper's compression, log-prob and no-speech thresholds, and `hallucination_silence_threshold`.
+5. **Deterministic post-processing.** Hallucination filters (likely silence with low confidence, high compression ratio, known phrases such as "Thanks for watching" _only_ when the model doubts there is speech, and lines repeated three or more times) are counted as a quality metric. Normalization makes segments monotonic and non-overlapping, splits anything over 20 s at sentence ends using word timings, and merges fragments, giving the 5–20 s citation units of ADR-015.
+6. **Language is detected on the first window and then fixed** for the rest of the video (consistency, and it saves a detection pass per window). `TRANSCRIPTION_LANGUAGE` can force it.
+7. **Provider seam.** `TranscriptionProvider` has two implementations: `MlxWhisperProvider` (Apple Silicon, default locally) and `FasterWhisperProvider` (CTranslate2 on CPU or CUDA, for CI and cloud). Both use `large-v3-turbo` by default. Integration tests use faster-whisper `tiny`, so they are identical on macOS and Linux.
+8. **Audio is decoded with the FFmpeg CLI to float32 PCM**, not through faster-whisper's PyAV decoder: one decoder for the whole pipeline, and faster-whisper 1.2.1 passes an argument that newer PyAV releases removed.
+9. **Segments are bulk-loaded with `COPY`.** Thousands of rows for a long video go in one round trip, inside the stage's commit transaction.
+10. **The WER evaluation runs through the production path**, not raw Whisper, with Whisper's own text normalizers (the standard convention for reporting Whisper WER).
+
+**Known limitation.** OpenCV and PyAV both bundle `libavdevice`, so macOS prints a duplicate Objective-C class warning when both load in one worker. The duplicated classes are only for AVFoundation capture devices, which the pipeline never uses. If it ever causes trouble, the fix is to run the VAD through `onnxruntime` directly without importing `faster_whisper`.

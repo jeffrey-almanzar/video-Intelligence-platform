@@ -17,6 +17,7 @@ import {
   numeric,
   pgEnum,
   pgTable,
+  real,
   smallint,
   text,
   timestamp,
@@ -26,6 +27,7 @@ import {
 
 const citext = customType<{ data: string }>({ dataType: () => 'citext' });
 const bytea = customType<{ data: Buffer }>({ dataType: () => 'bytea' });
+const tsvector = customType<{ data: string }>({ dataType: () => 'tsvector' });
 const ts = (name: string) => timestamp(name, { withTimezone: true, mode: 'date' });
 const createdAt = () => ts('created_at').notNull().defaultNow();
 const updatedAt = () => ts('updated_at').notNull().defaultNow();
@@ -267,5 +269,55 @@ export const scenes = pgTable(
   (t) => [
     uniqueIndex('scenes_job_idx_idx').on(t.jobId, t.idx),
     check('scenes_time_order', sql`${t.endMs} > ${t.startMs}`),
+  ],
+);
+
+// ---------------------------------------------------------------- transcripts (P)
+export const transcripts = pgTable(
+  'transcripts',
+  {
+    id: uuid('id').primaryKey(),
+    jobId: uuid('job_id')
+      .notNull()
+      .unique()
+      .references(() => processingJobs.id, { onDelete: 'cascade' }),
+    videoId: uuid('video_id')
+      .notNull()
+      .references(() => videos.id, { onDelete: 'cascade' }),
+    language: text('language').notNull(), // ISO 639-1 as detected by Whisper ('en', 'es', ...)
+    provider: text('provider').notNull(), // 'mlx-whisper' | 'faster-whisper'
+    model: text('model').notNull(),
+    segmentCount: integer('segment_count').notNull(),
+    wordCount: integer('word_count').notNull(),
+    speechMs: integer('speech_ms'), // speech detected by VAD
+    metrics: jsonb('metrics'), // rtf, filtered hallucinations, windows...
+    createdAt: createdAt(),
+  },
+  (t) => [index('transcripts_video_idx').on(t.videoId)],
+);
+
+/** One row per caption-sized segment (5–20 s). `idx` is the citation id "S{idx}" (ADR-015). */
+export const transcriptSegments = pgTable(
+  'transcript_segments',
+  {
+    id: bigint('id', { mode: 'number' }).primaryKey().generatedAlwaysAsIdentity(),
+    transcriptId: uuid('transcript_id')
+      .notNull()
+      .references(() => transcripts.id, { onDelete: 'cascade' }),
+    idx: integer('idx').notNull(),
+    startMs: integer('start_ms').notNull(),
+    endMs: integer('end_ms').notNull(),
+    text: text('text').notNull(),
+    speaker: text('speaker'), // reserved for diarization
+    avgLogprob: real('avg_logprob'),
+    noSpeechProb: real('no_speech_prob'),
+    words: jsonb('words'), // [{w, s, e, p}] word timings in ms
+    tsv: tsvector('tsv').generatedAlwaysAs(sql`to_tsvector('simple', text)`),
+  },
+  (t) => [
+    uniqueIndex('transcript_segments_idx_idx').on(t.transcriptId, t.idx),
+    index('transcript_segments_time_idx').on(t.transcriptId, t.startMs),
+    index('transcript_segments_tsv_idx').using('gin', t.tsv),
+    check('transcript_segments_time_order', sql`${t.endMs} >= ${t.startMs}`),
   ],
 );

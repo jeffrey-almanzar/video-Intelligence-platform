@@ -73,7 +73,13 @@ def media(tmp_path_factory: pytest.TempPathFactory) -> dict[str, Path]:
 
 @pytest.fixture
 def settings(tmp_path: Path) -> Settings:
-    return Settings(work_dir=tmp_path / "work", stage_heartbeat_interval_s=0.2)  # type: ignore[call-arg]
+    # faster-whisper `tiny` keeps transcription tests fast and identical on macOS and Linux CI.
+    return Settings(  # type: ignore[call-arg]
+        work_dir=tmp_path / "work",
+        stage_heartbeat_interval_s=0.2,
+        transcription_provider="faster-whisper",
+        whisper_model="tiny",
+    )
 
 
 @pytest.fixture
@@ -134,6 +140,19 @@ class Harness:
                 (uuid7(), job_id, stage.name, position),
             )
         return video_id, job_id
+
+    def mark_done(self, job_id: UUID, *stages: str) -> None:
+        """Marks earlier stages succeeded so a later stage can be exercised on its own."""
+        for stage in stages:
+            self.owner.execute(
+                "UPDATE processing_stages SET status = 'succeeded' WHERE job_id = %s AND stage = %s",
+                (job_id, stage),
+            )
+
+    def put_extracted_audio(self, video_id: UUID, job_id: UUID, audio: Path) -> None:
+        """Places audio where `extract_media` would have uploaded it."""
+        key = f"videos/{video_id}/jobs/{job_id}/extract_media/audio.flac"
+        self.storage.upload(audio, key, "audio/flac")
 
     async def run_stage(
         self, video_id: UUID, job_id: UUID, stage: str, run: int = 1, **job: Any

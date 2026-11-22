@@ -20,6 +20,14 @@ async def run(ctx: StageContext) -> StageOutcome:
             raise PipelineError(
                 INTERNAL_ERROR, "integrity check failed: no audio asset for this job"
             )
+        cur = await conn.execute(
+            "SELECT count(*) FROM transcripts WHERE job_id = %s", (ctx.job_id,)
+        )
+        row = await cur.fetchone()
+        if not row or row[0] < 1:
+            raise PipelineError(
+                INTERNAL_ERROR, "integrity check failed: no transcript for this job"
+            )
         await conn.execute(
             """
             UPDATE processing_jobs

@@ -11,6 +11,7 @@ import { DbModule } from './db/db.module.js';
 import { EventsModule } from './events/events.module.js';
 import { HealthModule } from './health/health.module.js';
 import { InfraModule } from './infra/infra.module.js';
+import { IntelligenceModule } from './intelligence/intelligence.module.js';
 import { ProcessingModule } from './processing/processing.module.js';
 import { VideosModule } from './videos/videos.module.js';
 
@@ -38,6 +39,7 @@ import { VideosModule } from './videos/videos.module.js';
     ProcessingModule,
     VideosModule,
     EventsModule,
+    IntelligenceModule,
   ],
   providers: [
     { provide: APP_FILTER, useClass: ProblemDetailsFilter },

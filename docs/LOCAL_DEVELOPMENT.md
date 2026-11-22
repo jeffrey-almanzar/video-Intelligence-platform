@@ -58,6 +58,7 @@ Both should report `"status":"ok"`. The API reports `degraded` (HTTP 200) while 
 | ---------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
 | API with hot reload (instead of the container) | `make infra && make migrate && make api`                                                                                    |
 | Upload a video and follow processing           | `make upload FILE=path/to/video.mp4` (needs `make up` + `make ai`)                                                          |
+| Transcription evals (EN/ES WER, long-form)     | `make eval-data` once (~0.9 GB), then `make eval-transcription` and `make bench-transcription`                              |
 | Regenerate cross-language contracts            | `make contracts` (after editing `packages/contracts`)                                                                       |
 | Run unit tests / lint / types (what CI runs)   | `make check`                                                                                                                |
 | Integration tests (needs infra + Ollama)       | `make test-integration`                                                                                                     |

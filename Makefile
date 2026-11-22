@@ -7,6 +7,7 @@ OLLAMA_MODELS := qwen3:4b qwen3:8b qwen3-vl:4b qwen3-embedding:0.6b
 
 .DEFAULT_GOAL := help
 .PHONY: help setup env infra up down reset ps logs migrate api ai ai-api ai-worker web models obs upload contracts \
+        eval-data eval-transcription bench-transcription \
         test test-integration lint typecheck check spike-queue spike-inference
 
 help: ## Show available targets
@@ -93,6 +94,25 @@ upload: ## Upload a video through the API and follow processing: make upload FIL
 
 contracts: ## Regenerate TS + Pydantic contracts from packages/contracts
 	pnpm --filter @vip/contracts generate
+
+eval-data: ## Download transcription eval sets (~0.9 GB, CC BY 4.0) into evals/fixtures (gitignored)
+	mkdir -p evals/fixtures/downloads evals/fixtures/librispeech evals/fixtures/fleurs-es
+	cd evals/fixtures/downloads && \
+	  curl -fL -C - -o librispeech-test-clean.tar.gz https://www.openslr.org/resources/12/test-clean.tar.gz && \
+	  curl -fL -C - -o fleurs-es419-test.tar.gz https://huggingface.co/datasets/google/fleurs/resolve/main/data/es_419/audio/test.tar.gz && \
+	  curl -fL -o ../fleurs-es/test.tsv https://huggingface.co/datasets/google/fleurs/resolve/main/data/es_419/test.tsv && \
+	  tar -xzf librispeech-test-clean.tar.gz -C ../librispeech && \
+	  tar -xzf fleurs-es419-test.tar.gz -C ../fleurs-es
+	cd services/ai && uv run python scripts/build_longform.py 10 60 120
+
+eval-transcription: ## WER baselines through the production pipeline (needs `make eval-data`)
+	cd services/ai && uv run python scripts/eval_transcription.py librispeech --limit 200
+	cd services/ai && uv run python scripts/eval_transcription.py fleurs-es --limit 150
+
+bench-transcription: ## Long-form RTF / memory / WER on 10, 60 and 120 min of real speech
+	cd services/ai && uv run python scripts/bench_transcription.py ../../evals/fixtures/longform/librispeech-10min.flac
+	cd services/ai && uv run python scripts/bench_transcription.py ../../evals/fixtures/longform/librispeech-60min.flac
+	cd services/ai && uv run python scripts/bench_transcription.py ../../evals/fixtures/longform/librispeech-120min.flac
 
 spike-queue: ## Spike A: Node→Python BullMQ scenarios (needs `make infra` + `make ai-worker`)
 	cd apps/api && node --env-file=../../.env scripts/spikes/queue-producer.ts
