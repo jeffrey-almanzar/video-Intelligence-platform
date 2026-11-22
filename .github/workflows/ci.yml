@@ -127,7 +127,8 @@ jobs:
           uv run ruff format --check .
           uv run mypy
           uv run pytest
-          uv run pytest -m integration
+          # Ollama-backed tests run locally only (no inference server in CI).
+          uv run pytest -m "integration and not ollama"
       - name: Build CPU image
         working-directory: services/ai
         run: docker build -t vip-ai:ci .

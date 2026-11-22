@@ -77,5 +77,8 @@ ignore_missing_imports = true
 testpaths = ["tests"]
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"
-markers = ["integration: requires Postgres, Redis and Ollama running locally"]
+markers = [
+    "integration: requires Postgres, Redis and S3 storage (make infra && make migrate)",
+    "ollama: also requires a running Ollama server (local only; CI has no inference server)",
+]
 addopts = "-m 'not integration'"
