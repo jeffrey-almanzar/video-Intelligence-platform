@@ -1,0 +1,45 @@
+{
+  "$comment": "Phase 4 golden set (ARCHITECTURE §5.8). Media is downloaded by `make eval-golden-data` into evals/fixtures/golden/ (gitignored). Reference labels live next to this file in <id>.labels.json.",
+  "videos": [
+    {
+      "id": "blender-keynote-2022",
+      "title": "Blender Conference 2022 Keynote",
+      "speaker": "Ton Roosendaal",
+      "minutes": 19.1,
+      "license": "CC BY 3.0",
+      "attribution": "Blender Foundation, Ton Roosendaal",
+      "source": "https://commons.wikimedia.org/wiki/File:Keynote_-_Blender_Conference_2022.webm",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/f/f6/Keynote_-_Blender_Conference_2022.webm"
+    },
+    {
+      "id": "copyrightx-2-3",
+      "title": "CopyrightX Lecture 2.3: Fairness and Personality Theories (Personality)",
+      "speaker": "William Fisher",
+      "minutes": 27.5,
+      "license": "CC BY 3.0",
+      "attribution": "BerkmanCenter",
+      "source": "https://commons.wikimedia.org/wiki/File:William_Fisher,_CopyrightX-_Lecture_2.3,_Fairness_and_Personality_Theories-_Personality.webm",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/a/a1/William_Fisher%2C_CopyrightX-_Lecture_2.3%2C_Fairness_and_Personality_Theories-_Personality.webm"
+    },
+    {
+      "id": "yale-music-rhythm",
+      "title": "Listening to Music (MUSI 112), Lecture 3: Rhythm Fundamentals",
+      "speaker": "Craig Wright",
+      "minutes": 49.0,
+      "license": "CC BY 3.0",
+      "attribution": "YaleCourses",
+      "source": "https://commons.wikimedia.org/wiki/File:Lecture_3._Rhythm-_Fundamentals.webm",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/4/49/Lecture_3._Rhythm-_Fundamentals.webm"
+    },
+    {
+      "id": "maher-wikiconf-india-2016",
+      "title": "Keynote Speech by Katherine Maher at WikiConference India 2016",
+      "speaker": "Katherine Maher",
+      "minutes": 68.0,
+      "license": "CC BY 3.0",
+      "attribution": "Punjabi Wikimedians",
+      "source": "https://commons.wikimedia.org/wiki/File:Keynote_Speech_by_Katherine_Maher_at_WikiConference_India_2016.webm",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/f/fc/Keynote_Speech_by_Katherine_Maher_at_WikiConference_India_2016.webm"
+    }
+  ]
+}

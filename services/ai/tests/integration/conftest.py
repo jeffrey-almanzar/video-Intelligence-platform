@@ -79,6 +79,13 @@ def settings(tmp_path: Path) -> Settings:
         stage_heartbeat_interval_s=0.2,
         transcription_provider="faster-whisper",
         whisper_model="tiny",
+        # Recorded Ollama responses: CI has no inference server (tests/fixtures/analysis).
+        llm_backend="replay",
+        llm_cache_prefix=f"test-llm-cache/{uuid7()}",
+        llm_replay_fixture=Path(__file__).parent.parent
+        / "fixtures"
+        / "analysis"
+        / "blender-excerpt.llm.json",
     )
 
 
@@ -114,6 +121,7 @@ class Harness:
     queue: FakeQueue
     storage: Storage
     owner: psycopg.Connection[Any]
+    created: list[UUID] = field(default_factory=list)
 
     def create_video(self, path: Path) -> tuple[UUID, UUID]:
         """Arranges what the API would create on upload completion; uploads the file."""
@@ -134,6 +142,7 @@ class Harness:
                VALUES (%s, %s, %s, %s, 'test', '{}')""",
             (job_id, video_id, DEV_USER, f"test:{job_id}"),
         )
+        self.created.append(video_id)
         for position, stage in enumerate(PIPELINE_STAGES):
             self.owner.execute(
                 "INSERT INTO processing_stages (id, job_id, stage, position) VALUES (%s, %s, %s, %s)",
@@ -188,6 +197,11 @@ async def harness(settings: Settings, owner: psycopg.Connection[Any]) -> AsyncIt
         queue=queue,  # type: ignore[arg-type]
         stages=STAGES,
     )
-    yield Harness(runner=runner, queue=queue, storage=storage, owner=owner)
+    h = Harness(runner=runner, queue=queue, storage=storage, owner=owner)
+    yield h
+    # Remove this test's rows (jobs, stages and artifacts cascade): left behind as "running", they
+    # look stuck to a dev API's reconciler, which would re-enqueue them into the real queues.
+    for video_id in h.created:
+        owner.execute("DELETE FROM videos WHERE id = %s", (video_id,))
     await redis.aclose()
     await pool.close()

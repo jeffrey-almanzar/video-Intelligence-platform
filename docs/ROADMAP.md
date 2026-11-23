@@ -102,7 +102,7 @@ Details, measurements and exit-criteria results: [phases/PHASE_3_TRANSCRIPTION.m
 
 ---
 
-## Phase 4: AI intelligence
+## Phase 4: AI intelligence ✅ (completed 2026-11-22)
 
 | Deliverable              | Detail                                                                                                                                                                                           |
 | ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
@@ -116,6 +116,8 @@ Details, measurements and exit-criteria results: [phases/PHASE_3_TRANSCRIPTION.m
 **Failure scenarios:** invalid JSON or schema violations; cited segment IDs outside the chunk; duplicate takeaways across chunks; chapters with gaps or overlaps; Ollama restart mid-stage (resume from cache); a video with almost no speech.
 
 **Exit criteria:** a complete report for a 60+ min video, produced locally, with 100% of persisted citations resolving to real segments (deterministic check) and evaluation results committed.
+
+**Result:** ✅ a 68-minute talk went through the full stack (surviving an Ollama restart and a worker `kill -9`) with 79/79 citations and 29/29 topic mentions resolving through the API; golden-set results are in `evals/results/analysis/`. Details: [phases/PHASE_4_INTELLIGENCE.md](phases/PHASE_4_INTELLIGENCE.md).
 
 ---
 

@@ -29,6 +29,13 @@
       "when": 1795381213588,
       "tag": "0003_transcripts",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1795394670051,
+      "tag": "0004_intelligence_reports",
+      "breakpoints": true
     }
   ]
 }

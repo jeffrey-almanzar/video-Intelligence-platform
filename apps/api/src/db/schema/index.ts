@@ -9,6 +9,7 @@
 import { sql } from 'drizzle-orm';
 import {
   bigint,
+  boolean,
   check,
   customType,
   index,
@@ -71,6 +72,14 @@ export const stageStatus = pgEnum('stage_status', [
   'succeeded',
   'failed',
   'skipped',
+]);
+export const groundingType = pgEnum('grounding_type', ['stated', 'interpretation']);
+export const highlightKind = pgEnum('highlight_kind', [
+  'explanation',
+  'insight',
+  'recommendation',
+  'demonstration',
+  'qa',
 ]);
 export const mediaAssetKind = pgEnum('media_asset_kind', [
   'audio',
@@ -320,4 +329,151 @@ export const transcriptSegments = pgTable(
     index('transcript_segments_tsv_idx').using('gin', t.tsv),
     check('transcript_segments_time_order', sql`${t.endMs} >= ${t.startMs}`),
   ],
+);
+
+// ---------------------------------------------------------------- intelligence report (P)
+/**
+ * A cited span of transcript segments, resolved to timestamps by the AI service (ADR-015).
+ * Stored as jsonb on its parent item: always read and written with it (DATABASE_SCHEMA §3.7).
+ */
+export type EvidenceRange = { from_idx: number; to_idx: number; start_ms: number; end_ms: number };
+
+export const intelligenceReports = pgTable(
+  'intelligence_reports',
+  {
+    id: uuid('id').primaryKey(),
+    jobId: uuid('job_id')
+      .notNull()
+      .unique()
+      .references(() => processingJobs.id, { onDelete: 'cascade' }),
+    videoId: uuid('video_id')
+      .notNull()
+      .references(() => videos.id, { onDelete: 'cascade' }),
+    executiveSummary: text('executive_summary').notNull(),
+    // [{text, evidence: EvidenceRange[], grounding, confidence}]
+    summaryPoints: jsonb('summary_points').notNull(),
+    models: jsonb('models').notNull(), // {map, reduce, embedding}
+    promptVersion: text('prompt_version').notNull(),
+    quality: jsonb('quality'), // citation validity, grounding rates, LLM stats, fallbacks
+    createdAt: createdAt(),
+  },
+  (t) => [index('intelligence_reports_video_idx').on(t.videoId)],
+);
+
+const reportId = () =>
+  uuid('report_id')
+    .notNull()
+    .references(() => intelligenceReports.id, { onDelete: 'cascade' });
+const confidence = () => real('confidence');
+
+export const takeaways = pgTable(
+  'takeaways',
+  {
+    id: uuid('id').primaryKey(),
+    reportId: reportId(),
+    rank: smallint('rank').notNull(),
+    title: text('title').notNull(),
+    description: text('description').notNull(),
+    whyItMatters: text('why_it_matters').notNull(),
+    startMs: integer('start_ms').notNull(),
+    endMs: integer('end_ms'),
+    evidence: jsonb('evidence').$type<EvidenceRange[]>().notNull(),
+    grounding: groundingType('grounding').notNull(),
+    confidence: confidence(),
+  },
+  (t) => [
+    uniqueIndex('takeaways_report_rank_idx').on(t.reportId, t.rank),
+    check('takeaways_confidence_range', sql`${t.confidence} BETWEEN 0 AND 1`),
+  ],
+);
+
+export const chapters = pgTable(
+  'chapters',
+  {
+    id: uuid('id').primaryKey(),
+    reportId: reportId(),
+    idx: smallint('idx').notNull(),
+    title: text('title').notNull(),
+    description: text('description').notNull(),
+    startMs: integer('start_ms').notNull(),
+    endMs: integer('end_ms').notNull(),
+  },
+  (t) => [
+    uniqueIndex('chapters_report_idx_idx').on(t.reportId, t.idx),
+    check('chapters_time_order', sql`${t.endMs} > ${t.startMs}`),
+  ],
+);
+
+export const highlights = pgTable(
+  'highlights',
+  {
+    id: uuid('id').primaryKey(),
+    reportId: reportId(),
+    kind: highlightKind('kind').notNull(),
+    title: text('title').notNull(),
+    description: text('description').notNull(),
+    quote: text('quote'), // verbatim transcript excerpt (enforced by the AI service)
+    startMs: integer('start_ms').notNull(),
+    endMs: integer('end_ms'),
+    evidence: jsonb('evidence').$type<EvidenceRange[]>().notNull(),
+    grounding: groundingType('grounding').notNull(),
+    confidence: confidence(),
+  },
+  (t) => [
+    index('highlights_report_idx').on(t.reportId, t.kind, t.startMs),
+    check('highlights_confidence_range', sql`${t.confidence} BETWEEN 0 AND 1`),
+  ],
+);
+
+export const topics = pgTable(
+  'topics',
+  {
+    id: uuid('id').primaryKey(),
+    reportId: reportId(),
+    name: text('name').notNull(),
+    slug: text('slug').notNull(),
+    description: text('description'),
+    weight: real('weight').notNull(), // share of speech time covered by mentions
+  },
+  (t) => [uniqueIndex('topics_report_slug_idx').on(t.reportId, t.slug)],
+);
+
+export const topicMentions = pgTable(
+  'topic_mentions',
+  {
+    id: uuid('id').primaryKey(),
+    topicId: uuid('topic_id')
+      .notNull()
+      .references(() => topics.id, { onDelete: 'cascade' }),
+    startMs: integer('start_ms').notNull(),
+    endMs: integer('end_ms').notNull(),
+    firstSegmentIdx: integer('first_segment_idx').notNull(),
+    lastSegmentIdx: integer('last_segment_idx').notNull(),
+  },
+  (t) => [index('topic_mentions_topic_idx').on(t.topicId, t.startMs)],
+);
+
+// ---------------------------------------------------------------- AI observability (P)
+/** Metadata for every LLM call (outputs live in S3 `llm-cache/`, keyed by `cache_key`). */
+export const llmCalls = pgTable(
+  'llm_calls',
+  {
+    id: uuid('id').primaryKey(),
+    jobId: uuid('job_id').references(() => processingJobs.id, { onDelete: 'cascade' }),
+    stage: stageName('stage'),
+    operation: text('operation').notNull(), // map_chunk, reduce_takeaways, ...
+    model: text('model').notNull(),
+    promptVersion: text('prompt_version').notNull(),
+    cacheKey: text('cache_key'),
+    cacheHit: boolean('cache_hit').notNull().default(false),
+    inputTokens: integer('input_tokens'),
+    outputTokens: integer('output_tokens'),
+    latencyMs: integer('latency_ms'),
+    validationStatus: text('validation_status').notNull(), // valid | repaired | failed
+    repairAttempts: smallint('repair_attempts').notNull().default(0),
+    error: text('error'),
+    traceId: text('trace_id'),
+    createdAt: createdAt(),
+  },
+  (t) => [index('llm_calls_job_idx').on(t.jobId, t.stage)],
 );

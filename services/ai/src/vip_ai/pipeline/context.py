@@ -8,6 +8,7 @@ from typing import Any
 from uuid import UUID
 
 from psycopg import AsyncConnection
+from psycopg_pool import AsyncConnectionPool
 
 from vip_ai.config import Settings
 from vip_ai.infra.events import EventPublisher
@@ -39,6 +40,9 @@ class StageContext:
     events: EventPublisher
     #: Per-video scratch directory, shared by stages on the same host (a cache, never the truth).
     workdir: Path
+    #: For reading earlier stages' results and writing observability rows (`llm_calls`). A stage's
+    #: own results are written only by `StageOutcome.persist`, inside the commit transaction.
+    db: AsyncConnectionPool[Any]
     cancel_requested: bool = False
     _last_progress: float = field(default=0.0, repr=False)
 

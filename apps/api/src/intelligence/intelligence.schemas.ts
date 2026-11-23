@@ -16,3 +16,10 @@ export const transcriptQuerySchema = z
     path: ['toMs'],
   });
 export type TranscriptQuery = z.infer<typeof transcriptQuerySchema>;
+
+export const reportQuerySchema = z.object({
+  highlightKind: z
+    .enum(['explanation', 'insight', 'recommendation', 'demonstration', 'qa'])
+    .optional(),
+});
+export type ReportQuery = z.infer<typeof reportQuerySchema>;

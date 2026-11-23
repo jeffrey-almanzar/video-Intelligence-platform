@@ -113,6 +113,7 @@ class StageRunner:
             storage=self.storage,
             events=self.events,
             workdir=self.settings.resolved_work_dir / str(state.video_id),
+            db=self.pool,
         )
         heartbeat = asyncio.create_task(self._heartbeat(ctx))
         try:

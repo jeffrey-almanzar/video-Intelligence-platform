@@ -9,7 +9,7 @@ from tests.integration.conftest import Harness
 
 pytestmark = pytest.mark.integration
 
-STAGES = ("probe", "extract_media", "detect_scenes", "transcribe", "finalize")
+STAGES = ("probe", "extract_media", "detect_scenes", "transcribe", "analyze_transcript", "finalize")
 
 
 async def _run_all(h: Harness, video_id: object, job_id: object) -> None:
@@ -34,7 +34,7 @@ async def test_happy_path_produces_assets_scenes_and_ready_video(
             "SELECT count(*) FROM processing_stages WHERE job_id = %s AND status = 'succeeded'",
             job_id,
         )
-        == 5
+        == 6
     )
     assert (
         harness.one(
@@ -57,10 +57,13 @@ async def test_happy_path_produces_assets_scenes_and_ready_video(
         "extract_media",
         "detect_scenes",
         "transcribe",
+        "analyze_transcript",
         "finalize",
     ]
-    # A sine tone has no speech: an empty transcript, not an error.
+    # A sine tone has no speech: an empty transcript and an empty report, not an error.
     assert harness.one("SELECT segment_count FROM transcripts WHERE job_id = %s", job_id) == 0
+    quality = harness.one("SELECT quality FROM intelligence_reports WHERE job_id = %s", job_id)
+    assert quality["insufficient_speech"] is True
     # The audio artifact really is in storage.
     key = harness.one(
         "SELECT storage_key FROM media_assets WHERE job_id = %s AND kind = 'audio'", job_id

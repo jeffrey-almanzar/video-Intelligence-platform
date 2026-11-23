@@ -9,14 +9,17 @@ import { open, stat } from 'node:fs/promises';
 import path from 'node:path';
 
 const args = process.argv.slice(2);
-const file = args.find((a) => !a.startsWith('--'));
+const file = args.find(
+  (a, i) => !a.startsWith('--') && args[i - 1] !== '--title' && args[i - 1] !== '--api',
+);
 const api =
   args[args.indexOf('--api') + 1] && args.includes('--api')
     ? args[args.indexOf('--api') + 1]!
     : 'http://localhost:3000';
 const follow = !args.includes('--no-follow');
+const title = args.includes('--title') ? args[args.indexOf('--title') + 1] : undefined;
 if (!file) {
-  console.error('usage: node scripts/upload.ts <file> [--api URL] [--no-follow]');
+  console.error('usage: node scripts/upload.ts <file> [--title TITLE] [--api URL] [--no-follow]');
   process.exit(2);
 }
 
@@ -46,7 +49,12 @@ const started = Date.now();
 const created = await call<{
   video: { id: string };
   upload: { partSizeBytes: number; totalParts: number };
-}>('POST', '/v1/videos', { filename: path.basename(file), sizeBytes: size, contentType });
+}>('POST', '/v1/videos', {
+  filename: path.basename(file),
+  sizeBytes: size,
+  contentType,
+  ...(title ? { title } : {}),
+});
 const videoId = created.video.id;
 const { partSizeBytes, totalParts } = created.upload;
 console.log(

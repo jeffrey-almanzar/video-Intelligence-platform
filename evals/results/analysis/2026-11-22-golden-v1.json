@@ -1,0 +1,297 @@
+{
+ "name": "2026-11-22-golden-v1",
+ "report_suffix": "qwen3-4b",
+ "judge": {
+  "model": "qwen3:8b",
+  "prompt_version": "judge-v1"
+ },
+ "summary": {
+  "chapter_f1": 0.3338,
+  "key_point_coverage": 0.6308,
+  "groundedness_supported": 0.7596,
+  "groundedness_supported_or_partial": 0.9431,
+  "citation_validity": 1.0,
+  "schema_failure_rate": 0.0,
+  "repair_rate": 0.0
+ },
+ "videos": {
+  "blender-keynote-2022": {
+   "minutes": 19.1,
+   "analysis_seconds": 220.1,
+   "chapters": {
+    "precision": 0.75,
+    "recall": 0.375,
+    "f1": 0.5,
+    "matched": 3,
+    "predicted": 4,
+    "reference": 8
+   },
+   "coverage": {
+    "points": 11,
+    "covered": 8,
+    "rate": 0.7273,
+    "per_point": [
+     false,
+     true,
+     true,
+     true,
+     false,
+     true,
+     true,
+     true,
+     true,
+     false,
+     true
+    ]
+   },
+   "groundedness": {
+    "items": 21,
+    "supported": 12,
+    "partial": 8,
+    "unsupported": 1,
+    "supported_rate": 0.5714,
+    "supported_or_partial_rate": 0.9524
+   },
+   "citation_validity": {
+    "citations": 27,
+    "valid": 27,
+    "rate": 1.0
+   },
+   "llm": {
+    "calls": 6,
+    "cache_hits": 0,
+    "repaired": 0,
+    "failed": 0,
+    "input_tokens": 8342,
+    "output_tokens": 4396,
+    "llm_seconds": 207.3,
+    "schema_failure_rate": 0.0,
+    "repair_rate": 0.0
+   },
+   "counts": {
+    "summary_points": 6,
+    "takeaways": 5,
+    "chapters": 5,
+    "highlights": 10,
+    "topics": 5
+   },
+   "models": {
+    "map": "qwen3:4b",
+    "reduce": "qwen3:8b",
+    "embedding": "qwen3-embedding:0.6b"
+   }
+  },
+  "copyrightx-2-3": {
+   "minutes": 27.5,
+   "analysis_seconds": 325.3,
+   "chapters": {
+    "precision": 0.3333,
+    "recall": 0.1818,
+    "f1": 0.2353,
+    "matched": 2,
+    "predicted": 6,
+    "reference": 11
+   },
+   "coverage": {
+    "points": 12,
+    "covered": 8,
+    "rate": 0.6667,
+    "per_point": [
+     true,
+     true,
+     false,
+     false,
+     true,
+     true,
+     true,
+     false,
+     true,
+     true,
+     false,
+     true
+    ]
+   },
+   "groundedness": {
+    "items": 26,
+    "supported": 22,
+    "partial": 2,
+    "unsupported": 2,
+    "supported_rate": 0.8462,
+    "supported_or_partial_rate": 0.9231
+   },
+   "citation_validity": {
+    "citations": 44,
+    "valid": 44,
+    "rate": 1.0
+   },
+   "llm": {
+    "calls": 8,
+    "cache_hits": 0,
+    "repaired": 0,
+    "failed": 0,
+    "input_tokens": 13648,
+    "output_tokens": 6959,
+    "llm_seconds": 313.3,
+    "schema_failure_rate": 0.0,
+    "repair_rate": 0.0
+   },
+   "counts": {
+    "summary_points": 5,
+    "takeaways": 5,
+    "chapters": 7,
+    "highlights": 16,
+    "topics": 7
+   },
+   "models": {
+    "map": "qwen3:4b",
+    "reduce": "qwen3:8b",
+    "embedding": "qwen3-embedding:0.6b"
+   }
+  },
+  "yale-music-rhythm": {
+   "minutes": 49.0,
+   "analysis_seconds": 398.3,
+   "chapters": {
+    "precision": 0.2,
+    "recall": 0.2,
+    "f1": 0.2,
+    "matched": 2,
+    "predicted": 10,
+    "reference": 10
+   },
+   "coverage": {
+    "points": 15,
+    "covered": 9,
+    "rate": 0.6,
+    "per_point": [
+     true,
+     true,
+     true,
+     true,
+     false,
+     true,
+     false,
+     false,
+     false,
+     false,
+     true,
+     true,
+     false,
+     true,
+     true
+    ]
+   },
+   "groundedness": {
+    "items": 33,
+    "supported": 24,
+    "partial": 7,
+    "unsupported": 2,
+    "supported_rate": 0.7273,
+    "supported_or_partial_rate": 0.9394
+   },
+   "citation_validity": {
+    "citations": 60,
+    "valid": 60,
+    "rate": 1.0
+   },
+   "llm": {
+    "calls": 10,
+    "cache_hits": 0,
+    "repaired": 0,
+    "failed": 0,
+    "input_tokens": 20684,
+    "output_tokens": 8767,
+    "llm_seconds": 382.8,
+    "schema_failure_rate": 0.0,
+    "repair_rate": 0.0
+   },
+   "counts": {
+    "summary_points": 6,
+    "takeaways": 6,
+    "chapters": 11,
+    "highlights": 21,
+    "topics": 4
+   },
+   "models": {
+    "map": "qwen3:4b",
+    "reduce": "qwen3:8b",
+    "embedding": "qwen3-embedding:0.6b"
+   }
+  },
+  "maher-wikiconf-india-2016": {
+   "minutes": 68.0,
+   "analysis_seconds": 570.9,
+   "chapters": {
+    "precision": 0.4286,
+    "recall": 0.375,
+    "f1": 0.4,
+    "matched": 6,
+    "predicted": 14,
+    "reference": 16
+   },
+   "coverage": {
+    "points": 17,
+    "covered": 9,
+    "rate": 0.5294,
+    "per_point": [
+     false,
+     false,
+     true,
+     true,
+     false,
+     false,
+     true,
+     false,
+     false,
+     true,
+     true,
+     true,
+     true,
+     true,
+     false,
+     false,
+     true
+    ]
+   },
+   "groundedness": {
+    "items": 47,
+    "supported": 42,
+    "partial": 3,
+    "unsupported": 2,
+    "supported_rate": 0.8936,
+    "supported_or_partial_rate": 0.9574
+   },
+   "citation_validity": {
+    "citations": 83,
+    "valid": 83,
+    "rate": 1.0
+   },
+   "llm": {
+    "calls": 13,
+    "cache_hits": 0,
+    "repaired": 0,
+    "failed": 0,
+    "input_tokens": 29672,
+    "output_tokens": 12077,
+    "llm_seconds": 546.0,
+    "schema_failure_rate": 0.0,
+    "repair_rate": 0.0
+   },
+   "counts": {
+    "summary_points": 7,
+    "takeaways": 9,
+    "chapters": 15,
+    "highlights": 31,
+    "topics": 10
+   },
+   "models": {
+    "map": "qwen3:4b",
+    "reduce": "qwen3:8b",
+    "embedding": "qwen3-embedding:0.6b"
+   }
+  }
+ },
+ "labels": "written by Claude from the transcripts before reports existed; not human-reviewed",
+ "machine": "macOS-26.6.2-arm64-arm-64bit",
+ "date": "2026-11-23T01:38:50+00:00"
+}

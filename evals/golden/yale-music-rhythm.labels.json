@@ -1,0 +1,36 @@
+{
+  "video": "yale-music-rhythm",
+  "author": "Claude, from the Whisper transcript, before any report was generated",
+  "human_reviewed": false,
+  "notes": "Contains long music excerpts (adhan, jazz solo, Mozart, Strauss, R.E.M., Chopin, Bolero) and classroom interaction; a stress test for transcription and analysis.",
+  "chapters": [
+    { "start_s": 0, "title": "Course logistics" },
+    { "start_s": 119, "title": "Musical notation as a Western phenomenon" },
+    { "start_s": 398, "title": "Music without notation: the adhan and improvised jazz" },
+    { "start_s": 724, "title": "How notation shapes Western concerts and listening" },
+    { "start_s": 882, "title": "Note values, rests and dotted notes" },
+    { "start_s": 1025, "title": "Beat, meter, time signatures and rhythm" },
+    { "start_s": 1390, "title": "Hearing duple vs triple meter: Bulldog and conducting patterns" },
+    { "start_s": 1801, "title": "The downbeat and pickups" },
+    { "start_s": 1954, "title": "Four ways composers signal the downbeat" },
+    { "start_s": 2429, "title": "Rhythm recognition with Chopin" },
+    { "start_s": 2585, "title": "Ravel's Bolero: the brain finds the beat" }
+  ],
+  "key_points": [
+    "Musical notation is mainly a Western phenomenon, used principally for art music; most of the world's music isn't notated.",
+    "Notation lets composers specify details precisely, which makes the composer more important, and it preserves works so they can be revived as intended.",
+    "With notation, the performer becomes like a carpenter following the composer-architect's blueprint, unlike pop, jazz and rock, which are made orally.",
+    "Much of the beauty of music like the Islamic call to prayer lies between the notes, which Western notation cannot capture.",
+    "Jazz musicians improvise long solos from general plans (key, chord progression, length) rather than notated or memorized music.",
+    "Notation shapes behavior: classical audiences sit silently judging accurate reproduction, while gamelan, sitar and jazz audiences interact; the eye and mind replace the ear and body.",
+    "Note values (whole, half, quarter, eighth) represent duration with duple subdivisions, rests represent silence, and a dot adds half a note's value to create triple relationships.",
+    "The beat is a steady pulse roughly at the speed of the human pulse (about 72 per minute), and meter organizes beats into groups of two or three.",
+    "In a time signature, the bottom number shows the beat unit (4 means a quarter note) and the top shows how many beats are in each measure.",
+    "Rhythm is a pattern of longs and shorts superimposed on the beat and meter.",
+    "The course covers only simple meters: students must tell duple (strong-weak) from triple (strong-weak-weak) meter and recognize basic rhythms.",
+    "Cole Porter's Bulldog is in duple meter and uses syncopation; conducting patterns (down-up, down-over-up) help listeners feel the meter.",
+    "The downbeat, the first beat of each bar, must coincide with the conductor's down motion; music may begin with a pickup before the first downbeat.",
+    "Composers signal the downbeat in four ways: longer notes, accents, low notes in the accompaniment, and chord changes, which may be the most powerful.",
+    "In Ravel's Bolero no instrument plays the beat itself; the brain extracts the beat from the combined patterns."
+  ]
+}

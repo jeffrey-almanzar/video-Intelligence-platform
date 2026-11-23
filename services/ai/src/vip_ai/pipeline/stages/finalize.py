@@ -28,6 +28,14 @@ async def run(ctx: StageContext) -> StageOutcome:
             raise PipelineError(
                 INTERNAL_ERROR, "integrity check failed: no transcript for this job"
             )
+        cur = await conn.execute(
+            "SELECT count(*) FROM intelligence_reports WHERE job_id = %s", (ctx.job_id,)
+        )
+        row = await cur.fetchone()
+        if not row or row[0] < 1:
+            raise PipelineError(
+                INTERNAL_ERROR, "integrity check failed: no intelligence report for this job"
+            )
         await conn.execute(
             """
             UPDATE processing_jobs

@@ -515,3 +515,14 @@ The source of truth is now `apps/api/src/db/schema/index.ts` plus the SQL in `ap
 | Group roles are `vip_api_rw` / `vip_ai_rw` (NOLOGIN), with login users `vip_api` / `vip_ai` attached by `db:migrate` | Passwords come from the environment, never from migrations. Grants are in `0002_ownership_roles.sql`                                  |
 | `vip_api_rw` may also update a few `processing_stages` columns                                                       | The reconciler repairs stages whose worker died, and retry resets a failed stage                                                      |
 | `videos_status_idx` not created yet                                                                                  | No query uses it yet; it gets added together with the first query that needs it                                                       |
+
+### Phase 4 (intelligence report)
+
+Migration `0004_intelligence_reports.sql` creates §3.7 and `llm_calls` (§3.9) as proposed, with these differences:
+
+| Change                                                                                                           | Reason                                                                                                                                 |
+| ---------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| `evidence` ranges are stored as `{from_idx, to_idx, start_ms, end_ms}`, resolved by the AI service at write time | The API serves citations without joining `transcript_segments`; a range only ever covers adjacent cited segments, never an uncited one |
+| `summary_points` items carry `confidence` (the grounding check's semantic score)                                 | Same shape as takeaways and highlights, so the UI can treat every cited item alike                                                     |
+| `llm_calls.cache_key` has no partial index                                                                       | Cache lookups go to S3 (`llm-cache/{key}.json`), not Postgres; `llm_calls` is metadata for debugging and cost accounting               |
+| `vip_ai_rw` may only `SELECT, INSERT` on `llm_calls`                                                             | It's an append-only log                                                                                                                |

@@ -7,7 +7,7 @@ OLLAMA_MODELS := qwen3:4b qwen3:8b qwen3-vl:4b qwen3-embedding:0.6b
 
 .DEFAULT_GOAL := help
 .PHONY: help setup env infra up down reset ps logs migrate api ai ai-api ai-worker web models obs upload contracts \
-        eval-data eval-transcription bench-transcription \
+        eval-data eval-transcription bench-transcription eval-golden-data eval-analysis \
         test test-integration lint typecheck check spike-queue spike-inference
 
 help: ## Show available targets
@@ -90,7 +90,7 @@ check: lint typecheck test ## Everything CI runs without services
 	pnpm --filter @vip/contracts check
 
 upload: ## Upload a video through the API and follow processing: make upload FILE=path/to/video.mp4
-	cd apps/api && node scripts/upload.ts $(abspath $(FILE))
+	cd apps/api && node scripts/upload.ts $(abspath $(FILE)) $(if $(TITLE),--title "$(TITLE)")
 
 contracts: ## Regenerate TS + Pydantic contracts from packages/contracts
 	pnpm --filter @vip/contracts generate
@@ -113,6 +113,16 @@ bench-transcription: ## Long-form RTF / memory / WER on 10, 60 and 120 min of re
 	cd services/ai && uv run python scripts/bench_transcription.py ../../evals/fixtures/longform/librispeech-10min.flac
 	cd services/ai && uv run python scripts/bench_transcription.py ../../evals/fixtures/longform/librispeech-60min.flac
 	cd services/ai && uv run python scripts/bench_transcription.py ../../evals/fixtures/longform/librispeech-120min.flac
+
+eval-golden-data: ## Download the Phase 4 golden talks (~1.2 GB, CC BY 3.0) and transcribe them
+	mkdir -p evals/fixtures/golden
+	python3 -c "import json; [print(v['id'], v['url']) for v in json.load(open('evals/golden/manifest.json'))['videos']]" | \
+	  while read id url; do curl -fL -C - -o "evals/fixtures/golden/$$id.webm" "$$url"; done
+	cd services/ai && uv run python scripts/transcribe_file.py ../../evals/fixtures/golden/*.webm
+
+eval-analysis: ## Analyze the golden talks and score the reports (needs Ollama + `make eval-golden-data`)
+	cd services/ai && for f in ../../evals/fixtures/golden/*.transcript.json; do uv run python scripts/analyze_transcript.py $$f; done
+	cd services/ai && uv run python scripts/eval_analysis.py --suffix qwen3-4b --name $$(date +%F)-golden
 
 spike-queue: ## Spike A: Node→Python BullMQ scenarios (needs `make infra` + `make ai-worker`)
 	cd apps/api && node --env-file=../../.env scripts/spikes/queue-producer.ts
