@@ -202,3 +202,30 @@ Through `GET /v1/videos/:id/report` and the transcript API: **79/79 cited ranges
 
 - **Ollama restarted mid-map** (`brew services restart ollama` during chunk 2 of 8): the in-flight request failed, one retry failed while Ollama was coming up, the next succeeded. No stage failure; that chunk took 60 s instead of ~40 s.
 - **Worker `kill -9` after the takeaways reduce:** BullMQ redelivered the stage 70 s later; attempt 2 served all 9 finished calls (8 map + 1 reduce) from the S3 cache in under 1 s and made only the 3 remaining calls (2 min). One report, video published.
+
+---
+
+## Phase 5: frontend and baseline Q&A
+
+**Setup:** M1 Pro / 16 GB, 2026-11-23. Full stack: Next.js 16 (dev server and production build), NestJS in Docker, Python AI service native, Qwen3 4B through Ollama 0.40.17.
+
+### Baseline Q&A latency (Postgres full-text retrieval + Qwen3 4B with thinking, streamed)
+
+Measured from `llm_calls` (`operation = 'qa_generate'`): time from request to the last token, including retrieval, reasoning and the answer.
+
+| Questions                                                                                                                                                        | Server latency                 | Input / output tokens (output includes reasoning) |
+| ---------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------ | ------------------------------------------------- |
+| 5 answers on the 68-min keynote ("Which new Wikipedia went live?", "How many people donate…?", "What does she say about the Board of Trustees?" ×2, a follow-up) | **11.5–21.6 s, median 17.0 s** | 1.1–1.3k / 359–755                                |
+| A specific question on the 6-min E2E excerpt (SIGGRAPH)                                                                                                          | 18.2 s                         | 769 / 444                                         |
+| A broad question ("What is this video about?")                                                                                                                   | 35.2 s                         | 340 / 1,051                                       |
+
+Reasoning dominates: the first answer token arrives only after the model finishes thinking (the UI shows "Thinking…", refreshed every 5 s). Broad questions both reason longest and, with keyword retrieval, usually come back **without citations** (flagged in the UI). That's the baseline Phase 6's hybrid retrieval has to beat.
+
+### End-to-end test (Playwright, Chromium, stubbed AI backend)
+
+| Mode                       | Duration                          | What runs                                                                                                     |
+| -------------------------- | --------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| Replay (CI)                | **12.1 s** total, test body 6.7 s | Everything real except models: fixture transcript + 9 recorded Ollama responses. Verified with Ollama stopped |
+| Record (`make e2e-record`) | 2.8 min                           | Same flow against real Qwen3 4B/8B and Qwen3-Embedding                                                        |
+
+The test covers sign-up, a browser multipart upload straight to storage, live processing over SSE, the report, seeking from a takeaway, keyboard tab navigation, transcript search, a cited answer whose citation seeks the player, axe-core WCAG 2 A/AA scans (no serious or critical violations on the sign-up, library and video pages), and sign-out.

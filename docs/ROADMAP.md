@@ -121,7 +121,7 @@ Details, measurements and exit-criteria results: [phases/PHASE_3_TRANSCRIPTION.m
 
 ---
 
-## Phase 5: Frontend
+## Phase 5: Frontend ✅ (completed 2026-11-23)
 
 | Deliverable            | Detail                                                                                                                                                |
 | ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -134,6 +134,8 @@ Details, measurements and exit-criteria results: [phases/PHASE_3_TRANSCRIPTION.m
 | Quality                | Accessibility (keyboard nav, captions), loading and empty states, Playwright E2E for the happy path                                                   |
 
 **Exit criteria:** a non-technical user can upload a video, watch progress, explore the report, jump to timestamps and ask grounded questions. The Playwright E2E test passes in CI with a stubbed AI backend.
+
+**Result:** ✅ the Playwright happy path (sign-up → browser upload → live processing → report → seek → transcript search → cited answer → sign-out, with axe-core accessibility scans) passes against the real stack with a stubbed AI backend, in 12 s, with Ollama stopped; a CI job runs it. Details: [phases/PHASE_5_FRONTEND.md](phases/PHASE_5_FRONTEND.md).
 
 ---
 

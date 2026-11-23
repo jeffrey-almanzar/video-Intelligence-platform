@@ -12,6 +12,9 @@ async function bootstrap(): Promise<void> {
   app.enableShutdownHooks();
 
   const env = app.get<Env>(ENV);
+  // Behind the web app's rewrites (and later a load balancer): trust their X-Forwarded-For so
+  // rate limits apply per client, not per proxy.
+  app.getHttpAdapter().getInstance().set('trust proxy', env.TRUST_PROXY);
   app.enableCors({
     origin: env.CORS_ALLOWED_ORIGINS,
     credentials: true,

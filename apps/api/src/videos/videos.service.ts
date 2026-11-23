@@ -13,7 +13,7 @@ import { v7 as uuidv7 } from 'uuid';
 import { ENV } from '../config/config.module.js';
 import type { Env } from '../config/env.js';
 import { DB, type Database } from '../db/db.module.js';
-import { uploadSessions, videos } from '../db/schema/index.js';
+import { mediaAssets, uploadSessions, videos } from '../db/schema/index.js';
 import { type JobView, ProcessingService } from '../processing/processing.service.js';
 import { MultipartUploadNotFoundError, StorageService } from '../storage/storage.service.js';
 import {
@@ -63,6 +63,16 @@ export const toVideoView = (v: VideoRow): VideoView => ({
   createdAt: v.createdAt,
   updatedAt: v.updatedAt,
 });
+
+/** Long enough to watch a 4-hour video; the page fetches a fresh URL on every load. */
+const PLAYBACK_URL_TTL_SECONDS = 6 * 3600;
+
+export type PlaybackView = {
+  url: string;
+  contentType: string;
+  source: 'proxy' | 'original';
+  expiresAt: Date;
+};
 
 @Injectable()
 export class VideosService {
@@ -298,6 +308,32 @@ export class VideosService {
   }
 
   // ------------------------------------------------------------------ helpers
+
+  /**
+   * A presigned URL the browser's <video> element can play: the 720p H.264 proxy when processing
+   * made one (codecs browsers can't play), otherwise the original upload.
+   */
+  async playback(videoId: string, ownerId: string): Promise<PlaybackView> {
+    const video = await this.ownedVideo(videoId, ownerId);
+    const [proxy] = video.activeJobId
+      ? await this.db
+          .select({ key: mediaAssets.storageKey, contentType: mediaAssets.contentType })
+          .from(mediaAssets)
+          .where(and(eq(mediaAssets.jobId, video.activeJobId), eq(mediaAssets.kind, 'proxy_video')))
+      : [];
+    const source =
+      proxy ??
+      (video.storageKey && video.status !== 'uploading'
+        ? { key: video.storageKey, contentType: video.mimeType ?? 'video/mp4' }
+        : null);
+    if (!source) throw new NotFoundException('nothing to play yet: the upload has not finished');
+    return {
+      url: await this.storage.presignGet(source.key, PLAYBACK_URL_TTL_SECONDS),
+      contentType: source.contentType,
+      source: proxy ? 'proxy' : 'original',
+      expiresAt: new Date(Date.now() + PLAYBACK_URL_TTL_SECONDS * 1000),
+    };
+  }
 
   async ownedVideo(videoId: string, ownerId: string): Promise<VideoRow> {
     const [video] = await this.db

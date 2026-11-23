@@ -81,6 +81,7 @@ export const highlightKind = pgEnum('highlight_kind', [
   'demonstration',
   'qa',
 ]);
+export const messageRole = pgEnum('message_role', ['user', 'assistant']);
 export const mediaAssetKind = pgEnum('media_asset_kind', [
   'audio',
   'keyframe',
@@ -99,6 +100,34 @@ export const users = pgTable('users', {
   createdAt: createdAt(),
   updatedAt: updatedAt(),
 });
+
+/**
+ * Rotating refresh tokens (ADR-017). Only the SHA-256 of the opaque token is stored. A token that
+ * was already rotated (`replaced_by` set) and is presented again means the chain leaked: the whole
+ * family is revoked.
+ */
+export const refreshTokens = pgTable(
+  'refresh_tokens',
+  {
+    id: uuid('id').primaryKey(),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    familyId: uuid('family_id').notNull(),
+    tokenHash: bytea('token_hash').notNull().unique(),
+    expiresAt: ts('expires_at').notNull(),
+    revokedAt: ts('revoked_at'),
+    replacedBy: uuid('replaced_by'),
+    replacedAt: ts('replaced_at'),
+    userAgent: text('user_agent'),
+    ip: text('ip'),
+    createdAt: createdAt(),
+  },
+  (t) => [
+    index('refresh_tokens_user_idx').on(t.userId),
+    index('refresh_tokens_family_idx').on(t.familyId),
+  ],
+);
 
 // ---------------------------------------------------------------- videos & uploads (N; P writes probe columns)
 export const videos = pgTable(
@@ -476,4 +505,48 @@ export const llmCalls = pgTable(
     createdAt: createdAt(),
   },
   (t) => [index('llm_calls_job_idx').on(t.jobId, t.stage)],
+);
+
+// ---------------------------------------------------------------- Q&A (N; assistant content from P)
+export const conversations = pgTable(
+  'conversations',
+  {
+    id: uuid('id').primaryKey(),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    videoId: uuid('video_id')
+      .notNull()
+      .references(() => videos.id, { onDelete: 'cascade' }),
+    title: text('title'),
+    createdAt: createdAt(),
+    updatedAt: updatedAt(),
+  },
+  (t) => [index('conversations_user_video_idx').on(t.userId, t.videoId, t.updatedAt.desc())],
+);
+
+/** A segment an answer cites: `idx` is the citation id, times are resolved by the AI service. */
+export type MessageCitation = { idx: number; startMs: number; endMs: number };
+
+export const messages = pgTable(
+  'messages',
+  {
+    id: uuid('id').primaryKey(),
+    conversationId: uuid('conversation_id')
+      .notNull()
+      .references(() => conversations.id, { onDelete: 'cascade' }),
+    role: messageRole('role').notNull(),
+    content: text('content').notNull(),
+    citations: jsonb('citations').$type<MessageCitation[]>(),
+    // {cited, invalidCitationsRemoved, inferred, notCovered, unsupported, retrievalHits}
+    grounding: jsonb('grounding'),
+    // Which published results answered it (the video may be reprocessed later).
+    jobId: uuid('job_id').references(() => processingJobs.id, { onDelete: 'set null' }),
+    model: text('model'),
+    latencyMs: integer('latency_ms'),
+    tokensIn: integer('tokens_in'),
+    tokensOut: integer('tokens_out'),
+    createdAt: createdAt(),
+  },
+  (t) => [index('messages_conversation_idx').on(t.conversationId, t.createdAt)],
 );

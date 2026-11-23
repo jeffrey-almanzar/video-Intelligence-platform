@@ -19,11 +19,11 @@ from psycopg import AsyncConnection
 from psycopg.types.json import Jsonb
 
 from vip_ai.infra.ids import uuid7
-from vip_ai.pipeline.context import StageContext, StageOutcome
+from vip_ai.pipeline.context import Persist, StageContext, StageOutcome
 from vip_ai.pipeline.errors import FFMPEG_FAILED, SOURCE_MISSING, PipelineError
 from vip_ai.transcription.postprocess import filter_hallucinations, normalize, words_json
 from vip_ai.transcription.providers import TranscriptionProvider, build_provider
-from vip_ai.transcription.types import RawSegment, WindowResult, Word
+from vip_ai.transcription.types import RawSegment, Segment, WindowResult, Word
 from vip_ai.transcription.windows import (
     SAMPLE_RATE,
     Window,
@@ -96,8 +96,37 @@ async def _ensure_audio(ctx: StageContext) -> Path:
     return path
 
 
+def _fixture_segments(path: Path, duration_ms: int | None) -> tuple[str, list[Segment]]:
+    """A recorded transcript instead of a model (end-to-end tests): segments past the end of the
+    actual video are dropped, so the transcript always fits the uploaded file."""
+    data = json.loads(path.read_text())
+    limit = duration_ms or 10**12
+    segments = [
+        Segment(idx=s["idx"], start_ms=s["start_ms"], end_ms=s["end_ms"], text=s["text"], words=[],
+                avg_logprob=0.0, no_speech_prob=0.0)
+        for s in data["segments"] if s["end_ms"] <= limit
+    ]  # fmt: skip
+    return data.get("language", "en"), segments
+
+
+def _fixture_outcome(ctx: StageContext, fixture: Path) -> StageOutcome:
+    language, segments = _fixture_segments(fixture, ctx.video.duration_ms)
+    speech_ms = sum(s.end_ms - s.start_ms for s in segments)
+    metrics: dict[str, Any] = {
+        "provider": "fixture",
+        "segments": len(segments),
+        "language": language,
+    }
+    return StageOutcome(
+        persist=_persist(ctx, language, "fixture", fixture.name, segments, speech_ms, metrics),
+        metrics=metrics,
+    )
+
+
 async def run(ctx: StageContext) -> StageOutcome:
     settings = ctx.settings
+    if settings.transcription_provider == "fixture" and settings.transcription_fixture:
+        return _fixture_outcome(ctx, settings.transcription_fixture)
     started = time.monotonic()
     audio = await run_blocking(load_audio, await _ensure_audio(ctx))
     audio_s = len(audio) / SAMPLE_RATE
@@ -154,6 +183,18 @@ async def run(ctx: StageContext) -> StageOutcome:
         # Real-time factor over the full audio duration (decode time only, excludes resumed windows).
         "rtf": round(decode_s / audio_s, 4) if audio_s and not resumed else None,
     }
+    return StageOutcome(
+        persist=_persist(ctx, language or "unknown", provider.name, provider.model, segments,
+                         round(speech_s * 1000), metrics),
+        metrics=metrics,
+    )  # fmt: skip
+
+
+def _persist(
+    ctx: StageContext, language: str, provider: str, model: str, segments: list[Segment],
+    speech_ms: int, metrics: dict[str, Any],
+) -> Persist:  # fmt: skip
+    word_count = sum(len(s.text.split()) for s in segments)
     transcript_id = uuid7()
 
     async def persist(conn: AsyncConnection[Any]) -> None:
@@ -165,8 +206,8 @@ async def run(ctx: StageContext) -> StageOutcome:
                                      segment_count, word_count, speech_ms, metrics)
             VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             """,
-            (transcript_id, ctx.job_id, ctx.video.id, language or "unknown", provider.name, provider.model,
-             len(segments), word_count, round(speech_s * 1000), Jsonb(metrics)),
+            (transcript_id, ctx.job_id, ctx.video.id, language, provider, model,
+             len(segments), word_count, speech_ms, Jsonb(metrics)),
         )  # fmt: skip
         # COPY: thousands of rows for a long video, in one round trip.
         async with conn.cursor().copy(
@@ -183,4 +224,4 @@ async def run(ctx: StageContext) -> StageOutcome:
             (language, ctx.video.id),
         )
 
-    return StageOutcome(persist=persist, metrics=metrics)
+    return persist

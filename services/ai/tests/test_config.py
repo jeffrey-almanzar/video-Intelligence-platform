@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import pytest
 from pydantic import ValidationError
 
@@ -25,3 +27,20 @@ def test_missing_and_invalid_values_fail_fast(monkeypatch: pytest.MonkeyPatch) -
 
 def test_secret_is_not_rendered(settings: Settings) -> None:
     assert "a-sufficiently-long-token" not in repr(settings)
+
+
+def test_replay_backend_records_only_when_asked(tmp_path: Path) -> None:
+    from vip_ai.llm.factory import build_backend
+    from vip_ai.llm.replay import ReplayBackend
+
+    base = {
+        "ai_service_token": "x" * 16,
+        "llm_backend": "replay",
+        "llm_replay_fixture": tmp_path / "r.json",
+    }
+    replay = build_backend(Settings(**base))  # type: ignore[arg-type]
+    assert isinstance(replay, ReplayBackend)
+    assert replay.record_with is None
+    recording = build_backend(Settings(**base, llm_record=True))  # type: ignore[arg-type]
+    assert isinstance(recording, ReplayBackend)
+    assert recording.record_with is not None

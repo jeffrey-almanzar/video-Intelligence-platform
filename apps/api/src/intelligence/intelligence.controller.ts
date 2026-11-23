@@ -1,15 +1,18 @@
-import { Controller, Get, Param, Query } from '@nestjs/common';
+import { Controller, Get, Header, Param, Query } from '@nestjs/common';
 import { z } from 'zod';
 import { type AuthUser, CurrentUser } from '../auth/auth.js';
 import {
   type ReportQuery,
   reportQuerySchema,
+  type SearchQuery,
+  searchQuerySchema,
   type TranscriptQuery,
   transcriptQuerySchema,
 } from './intelligence.schemas.js';
 import {
   IntelligenceService,
   type ReportView,
+  type SearchView,
   type TranscriptView,
 } from './intelligence.service.js';
 
@@ -36,5 +39,26 @@ export class IntelligenceController {
     @CurrentUser() user: AuthUser,
   ): Promise<ReportView> {
     return this.intelligence.report(videoId, user.userId, query);
+  }
+
+  /** WebVTT captions for the player (`<track kind="captions">`). */
+  @Get(':videoId/captions')
+  @Header('Content-Type', 'text/vtt; charset=utf-8')
+  @Header('Cache-Control', 'private, max-age=300')
+  captions(
+    @Param('videoId', { schema: z.uuid() }) videoId: string,
+    @CurrentUser() user: AuthUser,
+  ): Promise<string> {
+    return this.intelligence.captions(videoId, user.userId);
+  }
+
+  /** Transcript search: segments containing every word (prefix match), in time order. */
+  @Get(':videoId/search')
+  search(
+    @Param('videoId', { schema: z.uuid() }) videoId: string,
+    @Query({ schema: searchQuerySchema }) query: SearchQuery,
+    @CurrentUser() user: AuthUser,
+  ): Promise<SearchView> {
+    return this.intelligence.search(videoId, user.userId, query);
   }
 }

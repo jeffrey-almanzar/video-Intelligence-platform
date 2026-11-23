@@ -27,6 +27,9 @@ env:
   S3_FORCE_PATH_STYLE: 'true'
   AI_API_URL: http://localhost:8000
   AI_SERVICE_TOKEN: ci-service-token-not-secret
+  JWT_SECRET: ci-jwt-secret-not-secret-0123456789abcdef
+  # 4100 is the Playwright stack's web origin (browser uploads go straight to storage).
+  CORS_ALLOWED_ORIGINS: http://localhost:4000,http://localhost:4100
 
 jobs:
   changes:
@@ -85,6 +88,7 @@ jobs:
       - uses: actions/setup-node@v4
         with: { node-version-file: .nvmrc, cache: pnpm }
       - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @vip/web test
       - run: pnpm --filter @vip/web build
       - run: pnpm --filter @vip/web typecheck
 
@@ -132,3 +136,51 @@ jobs:
       - name: Build CPU image
         working-directory: services/ai
         run: docker build -t vip-ai:ci .
+
+  # Phase 5 exit criterion: the happy path in a real browser against the whole stack, with a
+  # stubbed AI backend (fixture transcript + recorded LLM responses; no models in CI).
+  e2e:
+    needs: changes
+    if: needs.changes.outputs.api == 'true' || needs.changes.outputs.web == 'true' || needs.changes.outputs.ai == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env: { POSTGRES_USER: vip, POSTGRES_PASSWORD: vip_ci, POSTGRES_DB: vip }
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U vip" --health-interval 5s --health-timeout 3s --health-retries 20
+      redis:
+        image: redis:7.4-alpine
+        ports: ['6379:6379']
+        options: >-
+          --health-cmd "redis-cli ping" --health-interval 5s --health-timeout 3s --health-retries 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install FFmpeg
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg
+      - uses: astral-sh/setup-uv@v6
+        with: { enable-cache: true }
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with: { node-version-file: .nvmrc, cache: pnpm }
+      - run: pnpm install --frozen-lockfile
+      - run: uv sync --frozen
+        working-directory: services/ai
+      - uses: ./.github/actions/storage
+      - run: pnpm --filter @vip/api build && pnpm --filter @vip/api db:migrate
+      - name: Build web for the E2E stack
+        working-directory: apps/web
+        run: API_URL=http://127.0.0.1:3100 pnpm exec next build
+      - run: pnpm exec playwright install --with-deps chromium
+        working-directory: apps/web
+      - run: pnpm exec playwright test
+        working-directory: apps/web
+      - if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: apps/web/playwright-report
+          retention-days: 7
+

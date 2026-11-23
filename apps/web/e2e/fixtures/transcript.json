@@ -1,0 +1,313 @@
+{
+"language": "en",
+"provider": "mlx-whisper",
+"model": "mlx-community/whisper-large-v3-turbo",
+"segments": [
+{
+"idx": 0,
+"start_ms": 27448,
+"end_ms": 33348,
+"text": "So welcome everyone, welcome to the Blender Conference 2022."
+},
+{
+"idx": 1,
+"start_ms": 37228,
+"end_ms": 41168,
+"text": "And we are celebrating that 20 years ago, here in Amsterdam,"
+},
+{
+"idx": 2,
+"start_ms": 41388,
+"end_ms": 44548,
+"text": "Blender became open source. So happy birthday to Blender."
+},
+{
+"idx": 3,
+"start_ms": 52028,
+"end_ms": 57748,
+"text": "And I want to start the presentation with good news, because I'm still there!"
+},
+{
+"idx": 4,
+"start_ms": 62778,
+"end_ms": 72158,
+"text": "So, this talk is not going to end with a sad ending or whatever. The doctors declared me fully clean. I don't have to worry."
+},
+{
+"idx": 5,
+"start_ms": 72438,
+"end_ms": 78438,
+"text": "And I'm as healthy as an old man like me can be. So, don't worry. No worries. No worries."
+},
+{
+"idx": 6,
+"start_ms": 81988,
+"end_ms": 83108,
+"text": "Thank you."
+},
+{
+"idx": 7,
+"start_ms": 85828,
+"end_ms": 92588,
+"text": "Now, for my story, I do want to take you back three years, because that was the previous Blender conference."
+},
+{
+"idx": 8,
+"start_ms": 95048,
+"end_ms": 99168,
+"text": "And at the Blender conference, I was making a funny joke,"
+},
+{
+"idx": 9,
+"start_ms": 99308,
+"end_ms": 108508,
+"text": "to say, I'm going to resign from my duties in Blender in five years, right? And that was a little bit challenging fate,"
+},
+{
+"idx": 10,
+"start_ms": 108508,
+"end_ms": 111568,
+"text": "because it wasn't four months later"
+},
+{
+"idx": 11,
+"start_ms": 111568,
+"end_ms": 116568,
+"text": "or I was in hospital, balancing on the edge of life and death."
+},
+{
+"idx": 12,
+"start_ms": 116948,
+"end_ms": 127048,
+"text": "Luckily, my own prospects quickly went better, but then, you know, it happened. I got out of the hospital and the world was empty."
+},
+{
+"idx": 13,
+"start_ms": 127388,
+"end_ms": 130948,
+"text": "It was like being in a zombie movie, being the only survival."
+},
+{
+"idx": 14,
+"start_ms": 131568,
+"end_ms": 135948,
+"text": "So I think people probably remember this famous cartoon."
+},
+{
+"idx": 15,
+"start_ms": 135948,
+"end_ms": 143828,
+"text": "So we all thought, ah, this whole COVID thing will go away, it's a little thing, right? But it was quite a big thing."
+},
+{
+"idx": 16,
+"start_ms": 144108,
+"end_ms": 147528,
+"text": "And it was almost three years later, it's still a thing."
+},
+{
+"idx": 17,
+"start_ms": 147748,
+"end_ms": 151128,
+"text": "Luckily, it's going away, that's why we can do this event."
+},
+{
+"idx": 18,
+"start_ms": 151428,
+"end_ms": 155288,
+"text": "And I think everybody was like, yeah, finally we can do things again."
+},
+{
+"idx": 19,
+"start_ms": 155588,
+"end_ms": 161908,
+"text": "Were it not that somebody in the Kremlin decided to invade an innocent country"
+},
+{
+"idx": 20,
+"start_ms": 161908,
+"end_ms": 177028,
+"text": "and play war games with everyone. So that's a big threat. But what's happening after that? We have an energy crisis. All know this, and this is going to be a big thing for the coming years."
+},
+{
+"idx": 21,
+"start_ms": 177468,
+"end_ms": 185108,
+"text": "And we didn't forget about our good old friend, that climate change. So this is the biggest threat for mankind"
+},
+{
+"idx": 22,
+"start_ms": 185108,
+"end_ms": 188988,
+"text": "that will cause a massive biodiversity collapse."
+},
+{
+"idx": 23,
+"start_ms": 188988,
+"end_ms": 193788,
+"text": "So, all doom and gloom, right?"
+},
+{
+"idx": 24,
+"start_ms": 194068,
+"end_ms": 198588,
+"text": "But I can tell you, there's even one more thing worse for mankind."
+},
+{
+"idx": 25,
+"start_ms": 208708,
+"end_ms": 210868,
+"text": "The metaphors, right?"
+},
+{
+"idx": 26,
+"start_ms": 212188,
+"end_ms": 219188,
+"text": "We all know the hype, and on one hand, you could see it as this horrible nightmare, right?"
+},
+{
+"idx": 27,
+"start_ms": 219328,
+"end_ms": 224788,
+"text": "What we know from the Matrix movies, where people will be connected with neural links"
+},
+{
+"idx": 28,
+"start_ms": 224788,
+"end_ms": 231288,
+"text": "directly to the internet, and the big corporations are going to control our bodies and our thoughts"
+},
+{
+"idx": 29,
+"start_ms": 231288,
+"end_ms": 237228,
+"text": "and everything, so that we make sure that we are fully absorbed in some kind of universe that doesn't really exist."
+},
+{
+"idx": 30,
+"start_ms": 238008,
+"end_ms": 245428,
+"text": "But that's the nightmare version, probably the wet dream of Mark Zuckerberg and other friends, but I hope this is not going to happen."
+},
+{
+"idx": 31,
+"start_ms": 245948,
+"end_ms": 251268,
+"text": "The other more neutral way to look at it is that this is the new next internet."
+},
+{
+"idx": 32,
+"start_ms": 251268,
+"end_ms": 257368,
+"text": "The internet will become 3D, or more 3D, and we probably will start browsing"
+},
+{
+"idx": 33,
+"start_ms": 257368,
+"end_ms": 260628,
+"text": "and experiencing the internet with 3D engines."
+},
+{
+"idx": 34,
+"start_ms": 261708,
+"end_ms": 268208,
+"text": "So that's a great technology challenge. And you can see that the whole industry is jumping on it,"
+},
+{
+"idx": 35,
+"start_ms": 268388,
+"end_ms": 277868,
+"text": "and they are all, of course, promising that they will make it open, open source and open standards. And if you look at all those companies"
+},
+{
+"idx": 36,
+"start_ms": 277868,
+"end_ms": 282448,
+"text": "who are promising to make sure that there will be public standards"
+},
+{
+"idx": 37,
+"start_ms": 282448,
+"end_ms": 288208,
+"text": "that will all be open and friendly and accessible for everyone. So then I think,"
+},
+{
+"idx": 38,
+"start_ms": 288648,
+"end_ms": 291888,
+"text": "so where are the people here, right?"
+},
+{
+"idx": 39,
+"start_ms": 292188,
+"end_ms": 298608,
+"text": "I was last summer at SIGGRAPH in Vancouver, and there were events about the Metaverse,"
+},
+{
+"idx": 40,
+"start_ms": 298788,
+"end_ms": 303728,
+"text": "and you saw those big corporations making big stories about what they are going to do."
+},
+{
+"idx": 41,
+"start_ms": 304768,
+"end_ms": 309008,
+"text": "And one of the organizers, I met him afterwards, I asked him,"
+},
+{
+"idx": 42,
+"start_ms": 309188,
+"end_ms": 312548,
+"text": "why wasn't Blender invited? Why were we not there?"
+},
+{
+"idx": 43,
+"start_ms": 312948,
+"end_ms": 316128,
+"text": "And he said, oh my God, we forgot probably."
+},
+{
+"idx": 44,
+"start_ms": 316628,
+"end_ms": 320748,
+"text": "And I said, well, even when you would have invited me,"
+},
+{
+"idx": 45,
+"start_ms": 321128,
+"end_ms": 324428,
+"text": "I would have declared. I don't think I belong there."
+},
+{
+"idx": 46,
+"start_ms": 325028,
+"end_ms": 336168,
+"text": "Blender is still super small, and I don't think I can make any difference there. All of those companies, the corporations, they're all working with billions of dollars of budgets,"
+},
+{
+"idx": 47,
+"start_ms": 337288,
+"end_ms": 343588,
+"text": "they're developing things and making a pie and slicing it up to make sure that everybody can make a lot of money."
+},
+{
+"idx": 48,
+"start_ms": 343968,
+"end_ms": 350208,
+"text": "That's not where I can contribute things to. But there is an issue that we have to tackle,"
+},
+{
+"idx": 49,
+"start_ms": 351568,
+"end_ms": 356128,
+"text": "because who do you really trust to make the next Internet?"
+},
+{
+"idx": 50,
+"start_ms": 356128,
+"end_ms": 365448,
+"text": "But is that meta? Is it Google or Amazon? Is it Apple? Or do we trust Elon Musk to do all of this?"
+}
+]
+}

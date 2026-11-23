@@ -2,6 +2,7 @@ import {
   AbortMultipartUploadCommand,
   CompleteMultipartUploadCommand,
   CreateMultipartUploadCommand,
+  GetObjectCommand,
   HeadObjectCommand,
   NoSuchUpload,
   type S3Client,
@@ -39,6 +40,15 @@ export class StorageService {
     );
     if (!res.UploadId) throw new Error('storage returned no UploadId');
     return res.UploadId;
+  }
+
+  /** A time-limited GET URL for the browser (video playback). */
+  presignGet(key: string, expiresInSeconds: number): Promise<string> {
+    return getSignedUrl(
+      this.presigner,
+      new GetObjectCommand({ Bucket: this.env.S3_BUCKET, Key: key }),
+      { expiresIn: expiresInSeconds },
+    );
   }
 
   presignPart(key: string, uploadId: string, partNumber: number): Promise<string> {

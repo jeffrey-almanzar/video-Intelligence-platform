@@ -526,3 +526,15 @@ Migration `0004_intelligence_reports.sql` creates §3.7 and `llm_calls` (§3.9) 
 | `summary_points` items carry `confidence` (the grounding check's semantic score)                                 | Same shape as takeaways and highlights, so the UI can treat every cited item alike                                                     |
 | `llm_calls.cache_key` has no partial index                                                                       | Cache lookups go to S3 (`llm-cache/{key}.json`), not Postgres; `llm_calls` is metadata for debugging and cost accounting               |
 | `vip_ai_rw` may only `SELECT, INSERT` on `llm_calls`                                                             | It's an append-only log                                                                                                                |
+
+### Phase 5 (auth and Q&A)
+
+Migrations `0005_auth.sql` (`refresh_tokens`) and `0006_conversations.sql` (`conversations`, `messages`, enum `message_role`), all owned by NestJS (`vip_api_rw`).
+
+| Change                                            | Reason                                                                                                                                                                |
+| ------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `refresh_tokens.replaced_at` added                | Distinguishes a concurrent refresh (two tabs, within 10 s: rejected, family kept) from reuse of a stolen token (later: whole family revoked)                          |
+| `refresh_tokens.ip` is `text`, not `inet`         | Informational only (never queried); `req.ip` can be an IPv4-mapped IPv6 string                                                                                        |
+| `messages.citations` is `[{idx, startMs, endMs}]` | Resolved and validated by the AI service at answer time, so the UI renders playable citations without a join                                                          |
+| `messages.grounding` stores the answer's flags    | `{cited, invalidCitationsRemoved, inferred, notCovered, unsupported, retrievalHits}`: the UI warns on unsupported answers, and Phase 6 evaluations can aggregate them |
+| `llm_calls` rows with `operation = 'qa_generate'` | Q&A calls are logged by the AI service against the job whose results answered them (`stage` is null)                                                                  |

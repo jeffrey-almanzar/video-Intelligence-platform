@@ -9,6 +9,7 @@ const valid = {
   S3_SECRET_ACCESS_KEY: 'secret',
   AI_API_URL: 'http://localhost:8000',
   AI_SERVICE_TOKEN: 'a-sufficiently-long-token',
+  JWT_SECRET: 'x'.repeat(32),
 };
 
 describe('parseEnv', () => {
@@ -43,5 +44,18 @@ describe('parseEnv', () => {
       expect(message).toContain('REDIS_URL');
       expect(message).toContain('AI_SERVICE_TOKEN');
     }
+  });
+});
+
+describe('auth settings', () => {
+  it('requires a long JWT secret and makes cookies Secure in production', async () => {
+    const { cookieSecure } = await import('./env.js');
+    const base = { ...valid };
+    expect(() => parseEnv({ ...base, JWT_SECRET: 'too-short' })).toThrow(/JWT_SECRET/);
+    expect(cookieSecure(parseEnv(base))).toBe(false);
+    expect(cookieSecure(parseEnv({ ...base, COOKIE_SECURE: 'true' }))).toBe(true);
+    expect(
+      cookieSecure(parseEnv({ ...base, NODE_ENV: 'production', COOKIE_SECURE: 'false' })),
+    ).toBe(true);
   });
 });

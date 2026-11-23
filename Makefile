@@ -72,6 +72,7 @@ obs: ## Start Grafana + OTel collector (Grafana on http://localhost:3001)
 
 test: ## Unit tests (no services needed)
 	pnpm --filter @vip/api test
+	pnpm --filter @vip/web test
 	cd services/ai && uv run pytest
 
 test-integration: ## Integration tests (needs `make infra`, Ollama running)
@@ -123,6 +124,16 @@ eval-golden-data: ## Download the Phase 4 golden talks (~1.2 GB, CC BY 3.0) and 
 eval-analysis: ## Analyze the golden talks and score the reports (needs Ollama + `make eval-golden-data`)
 	cd services/ai && for f in ../../evals/fixtures/golden/*.transcript.json; do uv run python scripts/analyze_transcript.py $$f; done
 	cd services/ai && uv run python scripts/eval_analysis.py --suffix qwen3-4b --name $$(date +%F)-golden
+
+e2e: ## Playwright happy path: real stack, stubbed AI (recorded transcript + LLM). Needs `make infra`
+	pnpm --filter @vip/api build
+	cd apps/web && pnpm exec playwright install chromium
+	cd apps/web && API_URL=http://127.0.0.1:3100 pnpm exec next build
+	cd apps/web && pnpm exec playwright test
+
+e2e-record: ## Re-record the E2E model responses against real Ollama (after prompt/model/test changes)
+	cd apps/web && python3 -c "import pathlib; pathlib.Path('e2e/fixtures/llm.json').write_text('{}')"
+	$(MAKE) e2e LLM_RECORD=true
 
 spike-queue: ## Spike A: Node→Python BullMQ scenarios (needs `make infra` + `make ai-worker`)
 	cd apps/api && node --env-file=../../.env scripts/spikes/queue-producer.ts

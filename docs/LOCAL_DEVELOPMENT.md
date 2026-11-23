@@ -54,20 +54,22 @@ Both should report `"status":"ok"`. The API reports `degraded` (HTTP 200) while 
 
 ## 3. Day-to-day workflows
 
-| Task                                           | Command                                                                                                                     |
-| ---------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
-| API with hot reload (instead of the container) | `make infra && make migrate && make api`                                                                                    |
-| Upload a video and follow processing           | `make upload FILE=path/to/video.mp4` (needs `make up` + `make ai`)                                                          |
-| Transcription evals (EN/ES WER, long-form)     | `make eval-data` once (~0.9 GB), then `make eval-transcription` and `make bench-transcription`                              |
-| Report-quality evals (golden talks, LLM judge) | `make eval-golden-data` once (~1.2 GB), then `make eval-analysis` (needs Ollama; ~25 min)                                   |
-| Analyze one transcript offline                 | `cd services/ai && uv run python scripts/analyze_transcript.py <transcript.json>`                                           |
-| Re-record LLM fixtures after prompt changes    | `cd services/ai && VIP_RECORD_LLM=1 uv run pytest tests/test_analysis_snapshot.py` (needs Ollama)                           |
-| Regenerate cross-language contracts            | `make contracts` (after editing `packages/contracts`)                                                                       |
-| Run unit tests / lint / types (what CI runs)   | `make check`                                                                                                                |
-| Integration tests (needs infra + Ollama)       | `make test-integration`                                                                                                     |
-| Stop containers (keep data)                    | `make down`                                                                                                                 |
-| Wipe local data (asks first)                   | `make reset`                                                                                                                |
-| Traces in Grafana                              | `make obs`, set `OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318` in `.env`, restart services, open http://localhost:3001 |
+| Task                                           | Command                                                                                                                                                                        |
+| ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| API with hot reload (instead of the container) | `make infra && make migrate && make api`                                                                                                                                       |
+| Use the app in a browser                       | `make up && make ai` and `make web`, then http://localhost:4000. Create an account, or sign in as `dev@vip.local` with `DEV_USER_PASSWORD` from `.env` (set by `make migrate`) |
+| End-to-end test (real stack, stubbed AI)       | `make infra && make migrate`, then `make e2e` (no models needed; `make e2e-record` re-records against Ollama)                                                                  |
+| Upload a video and follow processing           | `make upload FILE=path/to/video.mp4 [TITLE=...]` (needs `make up` + `make ai`; signs in with `DEV_USER_PASSWORD`)                                                              |
+| Transcription evals (EN/ES WER, long-form)     | `make eval-data` once (~0.9 GB), then `make eval-transcription` and `make bench-transcription`                                                                                 |
+| Report-quality evals (golden talks, LLM judge) | `make eval-golden-data` once (~1.2 GB), then `make eval-analysis` (needs Ollama; ~25 min)                                                                                      |
+| Analyze one transcript offline                 | `cd services/ai && uv run python scripts/analyze_transcript.py <transcript.json>`                                                                                              |
+| Re-record LLM fixtures after prompt changes    | `cd services/ai && VIP_RECORD_LLM=1 uv run pytest tests/test_analysis_snapshot.py` (needs Ollama)                                                                              |
+| Regenerate cross-language contracts            | `make contracts` (after editing `packages/contracts`)                                                                                                                          |
+| Run unit tests / lint / types (what CI runs)   | `make check`                                                                                                                                                                   |
+| Integration tests (needs infra + Ollama)       | `make test-integration`                                                                                                                                                        |
+| Stop containers (keep data)                    | `make down`                                                                                                                                                                    |
+| Wipe local data (asks first)                   | `make reset`                                                                                                                                                                   |
+| Traces in Grafana                              | `make obs`, set `OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318` in `.env`, restart services, open http://localhost:3001                                                    |
 
 ## 4. Ports
 
