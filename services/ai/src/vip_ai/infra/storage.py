@@ -62,6 +62,18 @@ class Storage:
         )
         return src.stat().st_size
 
+    def get_bytes(self, key: str) -> bytes | None:
+        """Small objects only (e.g. cached LLM outputs). None when the key doesn't exist."""
+        try:
+            return bytes(self._client.get_object(Bucket=self.bucket, Key=key)["Body"].read())
+        except self._client.exceptions.ClientError as exc:
+            if exc.response.get("Error", {}).get("Code") in {"404", "NotFound", "NoSuchKey"}:
+                return None
+            raise
+
+    def put_bytes(self, key: str, data: bytes, content_type: str) -> None:
+        self._client.put_object(Bucket=self.bucket, Key=key, Body=data, ContentType=content_type)
+
     def size(self, key: str) -> int | None:
         try:
             return int(self._client.head_object(Bucket=self.bucket, Key=key)["ContentLength"])

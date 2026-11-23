@@ -1,0 +1,29 @@
+{
+  "video": "blender-keynote-2022",
+  "author": "Claude, from the Whisper transcript, before any report was generated",
+  "human_reviewed": false,
+  "chapters": [
+    { "start_s": 0, "title": "Welcome: 20 years of open-source Blender, and a health update" },
+    { "start_s": 85, "title": "Three hard years: hospital, COVID, war, energy and climate" },
+    { "start_s": 194, "title": "The metaverse hype and who to trust with the next internet" },
+    { "start_s": 392, "title": "Announcing Blender Lab, and AI as a tool for artists" },
+    { "start_s": 533, "title": "The freedom to create: three core freedoms" },
+    { "start_s": 628, "title": "Blender apps" },
+    { "start_s": 719, "title": "Rethinking Blender Studio, and the problem with pipelines" },
+    { "start_s": 931, "title": "A message to Hollywood" },
+    { "start_s": 1033, "title": "Add-ons must be GPL; an official extensions platform" }
+  ],
+  "key_points": [
+    "Blender became open source 20 years ago in Amsterdam, and the speaker is healthy again after a serious hospitalization.",
+    "The metaverse is being pushed by big corporations that many people no longer trust; Blender, with a large creative community and no shareholders, should step in.",
+    "A new initiative, Blender Lab, will gather five to ten top people to work on Blender's future, such as AR/VR, networking and online collaboration.",
+    "AI should be a tool that works for artists, under their control, and freely and openly available.",
+    "The way to build the metaverse is not to aim for it, but to do nice things for people: tools, sharing, collaboration and a fair living for artists.",
+    "The 'freedom to create' slogan rests on three freedoms: open-source software, access to creative resources and production knowledge, and access to markets.",
+    "Blender apps let people package blend files with Python-driven UI into their own custom applications, such as viewers or client presentations.",
+    "Blender Studio dropped its feature-film plan (the rights went to a production company) and refocuses on small teams sharing production knowledge.",
+    "Industrial pipelines serve whoever pays the bills and treat artists as disposable, as the closure of a large Blender-based studio showed.",
+    "Hollywood is welcome to contribute to Blender's mission, but Blender will not work for it; Blender serves the much larger rest of the market.",
+    "Add-ons are part of Blender and must be GPL; Blender will run an official extensions platform with pre-approved add-ons, alongside commercial marketplaces."
+  ]
+}

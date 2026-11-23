@@ -4,7 +4,7 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Literal
 
-from pydantic import Field, PostgresDsn, RedisDsn, SecretStr
+from pydantic import Field, PostgresDsn, RedisDsn, SecretStr, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -84,7 +84,28 @@ class Settings(BaseSettings):
     transcription_language: str | None = None
     transcription_window_s: float = Field(600.0, ge=30)
 
+    # --- analysis (ADR-008, ADR-009, ADR-010, ADR-024)
+    #: replay = serve recorded responses from LLM_REPLAY_FIXTURE (tests, CI, stubbed demos).
+    llm_backend: Literal["ollama", "replay"] = "ollama"
+    llm_replay_fixture: Path | None = None
+    llm_keep_alive: str = "10m"
+    #: S3 prefix of the content-addressed LLM output cache (tests use a unique one).
+    llm_cache_prefix: str = "llm-cache"
+    analysis_map_model: str = "qwen3:4b"
+    analysis_reduce_model: str = "qwen3:8b"
+    embedding_model: str = "qwen3-embedding:0.6b"
+    analysis_num_ctx: int = Field(8192, ge=2048, le=65536)
+    analysis_chunk_tokens: int = Field(2000, ge=500, le=30000)
+
     otel_exporter_otlp_endpoint: str | None = None
+
+    @model_validator(mode="after")
+    def _no_replay_in_production(self) -> "Settings":
+        if self.llm_backend == "replay" and self.environment == "production":
+            raise ValueError("LLM_BACKEND=replay is for tests and demos, not production")
+        if self.llm_backend == "replay" and self.llm_replay_fixture is None:
+            raise ValueError("LLM_BACKEND=replay needs LLM_REPLAY_FIXTURE")
+        return self
 
     @property
     def resolved_work_dir(self) -> Path:

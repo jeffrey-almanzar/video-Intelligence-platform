@@ -125,6 +125,7 @@ describe('Videos, uploads and processing (integration)', () => {
       'extract_media',
       'detect_scenes',
       'transcribe',
+      'analyze_transcript',
       'finalize',
     ]);
     expect(await queue.state(res.body.job.id, 'probe', 1)).toBe('waiting');
@@ -350,6 +351,123 @@ describe('Videos, uploads and processing (integration)', () => {
     ]);
     await owner.query(`UPDATE videos SET owner_id = $1 WHERE id = $2`, [stranger, videoId]);
     await http.get(`/v1/videos/${videoId}/transcript`).expect(404);
+  });
+
+  it('serves the published intelligence report with evidence in camelCase', async () => {
+    const { videoId, jobId } = await uploadedVideo();
+    await http.get(`/v1/videos/${videoId}/report`).expect(404); // not processed yet
+
+    // Arrange what the analyze_transcript stage would have written, then publish the job.
+    const reportId = uuidv7();
+    const ev = (from: number, to: number, start: number, end: number) => ({
+      from_idx: from,
+      to_idx: to,
+      start_ms: start,
+      end_ms: end,
+    });
+    await owner.query(
+      `INSERT INTO intelligence_reports (id, job_id, video_id, executive_summary, summary_points, models, prompt_version, quality)
+       VALUES ($1, $2, $3, 'A talk about testing.', $4, $5, 'v1', $6)`,
+      [
+        reportId,
+        jobId,
+        videoId,
+        JSON.stringify([
+          {
+            text: 'Tests matter.',
+            evidence: [ev(0, 1, 0, 12000)],
+            grounding: 'stated',
+            confidence: 0.8,
+          },
+        ]),
+        JSON.stringify({ map: 'qwen3:4b', reduce: 'qwen3:8b' }),
+        JSON.stringify({ citation_validity: { rate: 1 } }),
+      ],
+    );
+    for (const rank of [2, 1]) {
+      await owner.query(
+        `INSERT INTO takeaways (id, report_id, rank, title, description, why_it_matters, start_ms, end_ms, evidence, grounding, confidence)
+         VALUES ($1, $2, $3, $4, 'd', 'w', $5, $6, $7, 'stated', 0.7)`,
+        [
+          uuidv7(),
+          reportId,
+          rank,
+          `takeaway ${rank}`,
+          rank * 1000,
+          rank * 1000 + 500,
+          JSON.stringify([ev(rank, rank, rank * 1000, rank * 1000 + 500)]),
+        ],
+      );
+    }
+    for (const [idx, start, end] of [
+      [0, 0, 15000],
+      [1, 15000, 26000],
+    ]) {
+      await owner.query(
+        `INSERT INTO chapters (id, report_id, idx, title, description, start_ms, end_ms) VALUES ($1, $2, $3, $4, 'd', $5, $6)`,
+        [uuidv7(), reportId, idx, `chapter ${idx}`, start, end],
+      );
+    }
+    for (const [kind, start] of [
+      ['insight', 5000],
+      ['recommendation', 1000],
+    ] as const) {
+      await owner.query(
+        `INSERT INTO highlights (id, report_id, kind, title, description, quote, start_ms, end_ms, evidence, grounding)
+         VALUES ($1, $2, $3, $4, 'd', 'q', $5, $6, $7, 'interpretation')`,
+        [
+          uuidv7(),
+          reportId,
+          kind,
+          kind,
+          start,
+          start + 1000,
+          JSON.stringify([ev(0, 0, start, start + 1000)]),
+        ],
+      );
+    }
+    const topicId = uuidv7();
+    await owner.query(
+      `INSERT INTO topics (id, report_id, name, slug, description, weight) VALUES ($1, $2, 'Testing', 'testing', 'd', 0.4)`,
+      [topicId, reportId],
+    );
+    await owner.query(
+      `INSERT INTO topic_mentions (id, topic_id, start_ms, end_ms, first_segment_idx, last_segment_idx) VALUES ($1, $2, 0, 12000, 0, 1)`,
+      [uuidv7(), topicId],
+    );
+    await owner.query(`UPDATE videos SET active_job_id = $1, status = 'ready' WHERE id = $2`, [
+      jobId,
+      videoId,
+    ]);
+
+    const res = await http.get(`/v1/videos/${videoId}/report`).expect(200);
+    expect(res.body.report).toMatchObject({
+      executiveSummary: 'A talk about testing.',
+      promptVersion: 'v1',
+      summaryPoints: [
+        { text: 'Tests matter.', evidence: [{ fromIdx: 0, toIdx: 1, startMs: 0, endMs: 12000 }] },
+      ],
+    });
+    expect(res.body.takeaways.map((t: { rank: number }) => t.rank)).toEqual([1, 2]);
+    expect(res.body.takeaways[0]).toMatchObject({
+      whyItMatters: 'w',
+      evidence: [{ fromIdx: 1, toIdx: 1, startMs: 1000, endMs: 1500 }],
+    });
+    expect(res.body.chapters.map((c: { startMs: number }) => c.startMs)).toEqual([0, 15000]);
+    expect(res.body.highlights.map((h: { kind: string }) => h.kind)).toEqual([
+      'recommendation',
+      'insight',
+    ]);
+    expect(res.body.topics[0]).toMatchObject({
+      slug: 'testing',
+      mentions: [{ startMs: 0, endMs: 12000, firstSegmentIdx: 0, lastSegmentIdx: 1 }],
+    });
+
+    const insights = await http
+      .get(`/v1/videos/${videoId}/report?highlightKind=insight`)
+      .expect(200);
+    expect(insights.body.highlights).toHaveLength(1);
+    await http.get(`/v1/videos/${videoId}/report?highlightKind=gossip`).expect(400);
   });
 
   function queueJob(jobId: string, stage: string, run: number) {

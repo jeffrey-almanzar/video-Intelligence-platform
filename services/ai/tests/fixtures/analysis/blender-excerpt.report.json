@@ -1,0 +1,361 @@
+{
+ "executive_summary": "The speaker reflects on overcoming a health crisis during the pandemic, highlighting global challenges like geopolitical conflicts and climate change. They argue for a new, more immersive internet era and emphasize the role of open-source tools like Blender. The talk questions who should lead internet development, advocating for inclusivity and open standards over corporate dominance.",
+ "summary_points": [
+  {
+   "text": "The speaker suggests that the next internet could be more immersive and 3D, potentially transforming how we interact online.",
+   "evidence": [
+    {
+     "from_idx": 32,
+     "to_idx": 32,
+     "start_ms": 251268,
+     "end_ms": 257368
+    }
+   ],
+   "grounding": "stated",
+   "confidence": 0.823
+  },
+  {
+   "text": "Open-source tools like Blender are highlighted as potential solutions for developing the next internet, though their small scale limits their impact.",
+   "evidence": [
+    {
+     "from_idx": 36,
+     "to_idx": 37,
+     "start_ms": 277868,
+     "end_ms": 288208
+    },
+    {
+     "from_idx": 46,
+     "to_idx": 46,
+     "start_ms": 325028,
+     "end_ms": 336168
+    }
+   ],
+   "grounding": "stated",
+   "confidence": 0.589
+  },
+  {
+   "text": "The speaker questions who should lead the development of the next internet, emphasizing the need for inclusivity and avoiding corporate dominance.",
+   "evidence": [
+    {
+     "from_idx": 36,
+     "to_idx": 37,
+     "start_ms": 277868,
+     "end_ms": 288208
+    }
+   ],
+   "grounding": "interpretation",
+   "confidence": 0.534
+  },
+  {
+   "text": "The speaker recommends trusting open-source communities over corporations for the development of the next internet.",
+   "evidence": [
+    {
+     "from_idx": 49,
+     "to_idx": 49,
+     "start_ms": 351568,
+     "end_ms": 356128
+    }
+   ],
+   "grounding": "stated",
+   "confidence": 0.608
+  }
+ ],
+ "takeaways": [
+  {
+   "rank": 1,
+   "title": "The Importance of Open Standards for the Next Internet",
+   "description": "The speaker highlights the necessity of open, accessible standards to ensure the next internet remains inclusive and not dominated by a few large corporations.",
+   "why_it_matters": "Open standards are crucial for preventing corporate control and ensuring the internet remains a shared, accessible resource for all.",
+   "start_ms": 277868,
+   "evidence": [
+    {
+     "from_idx": 36,
+     "to_idx": 37,
+     "start_ms": 277868,
+     "end_ms": 288208
+    },
+    {
+     "from_idx": 46,
+     "to_idx": 46,
+     "start_ms": 325028,
+     "end_ms": 336168
+    }
+   ],
+   "grounding": "interpretation",
+   "confidence": 0.669
+  },
+  {
+   "rank": 2,
+   "title": "Blender's Potential Role in Internet Development",
+   "description": "Blender, a small open-source tool, may have a critical role in shaping the next internet, despite its current limitations in the corporate landscape.",
+   "why_it_matters": "Blender's open-source nature could enable broader participation in internet development, even if it is not yet widely recognized or adopted.",
+   "start_ms": 277868,
+   "evidence": [
+    {
+     "from_idx": 36,
+     "to_idx": 37,
+     "start_ms": 277868,
+     "end_ms": 288208
+    },
+    {
+     "from_idx": 46,
+     "to_idx": 46,
+     "start_ms": 325028,
+     "end_ms": 336168
+    }
+   ],
+   "grounding": "interpretation",
+   "confidence": 0.56
+  },
+  {
+   "rank": 3,
+   "title": "Challenges of Corporate Dominance in Internet Development",
+   "description": "The speaker warns that the current corporate landscape may hinder the development of an inclusive internet, favoring control by a few dominant entities.",
+   "why_it_matters": "Corporate dominance threatens the diversity and accessibility of the internet, making it essential to challenge this trend.",
+   "start_ms": 277868,
+   "evidence": [
+    {
+     "from_idx": 36,
+     "to_idx": 37,
+     "start_ms": 277868,
+     "end_ms": 288208
+    }
+   ],
+   "grounding": "interpretation",
+   "confidence": 0.448
+  },
+  {
+   "rank": 4,
+   "title": "The Limitations of Small Tools in the Corporate Landscape",
+   "description": "The speaker suggests that small tools like Blender may struggle to make a significant impact in the current corporate-dominated internet environment.",
+   "why_it_matters": "Small, open-source tools face challenges in competing with large corporate entities, which may limit their influence on internet development.",
+   "start_ms": 325028,
+   "evidence": [
+    {
+     "from_idx": 46,
+     "to_idx": 46,
+     "start_ms": 325028,
+     "end_ms": 336168
+    }
+   ],
+   "grounding": "interpretation",
+   "confidence": 0.603
+  },
+  {
+   "rank": 5,
+   "title": "The Need for Inclusivity in Internet Development",
+   "description": "The speaker stresses that the next internet must be designed to be inclusive, ensuring that all users have equal access and participation.",
+   "why_it_matters": "Inclusivity is essential for the internet to serve as a platform for global collaboration and innovation.",
+   "start_ms": 277868,
+   "evidence": [
+    {
+     "from_idx": 36,
+     "to_idx": 37,
+     "start_ms": 277868,
+     "end_ms": 288208
+    }
+   ],
+   "grounding": "interpretation",
+   "confidence": 0.494
+  }
+ ],
+ "chapters": [
+  {
+   "idx": 0,
+   "title": "Blender's 20th Anniversary and Personal Health Update",
+   "description": "The speaker begins by celebrating Blender's 20th anniversary as open source and shares personal news about their recovery from a health crisis during the pandemic.",
+   "start_ms": 0,
+   "end_ms": 85828
+  },
+  {
+   "idx": 1,
+   "title": "Reflections on a Health Crisis and Global Challenges",
+   "description": "The speaker reflects on their health struggles from three years prior, contrasting their personal experience with global challenges like the pandemic, geopolitical conflicts, and climate change.",
+   "start_ms": 85828,
+   "end_ms": 288648
+  },
+  {
+   "idx": 2,
+   "title": "The Metaverse and Corporate Influence on the Internet's Future",
+   "description": "The speaker discusses the Metaverse and the role of large corporations in shaping the next internet, questioning who should lead its development.",
+   "start_ms": 288648,
+   "end_ms": 365448
+  }
+ ],
+ "highlights": [
+  {
+   "kind": "explanation",
+   "title": "The next internet could be 3D",
+   "description": "The speaker explains that the internet may evolve to become more immersive with 3D engines, allowing users to experience the internet in three dimensions.",
+   "quote": "The internet will become 3D, or more 3D, and we probably will start browsing",
+   "start_ms": 251268,
+   "evidence": [
+    {
+     "from_idx": 32,
+     "to_idx": 32,
+     "start_ms": 251268,
+     "end_ms": 257368
+    }
+   ],
+   "grounding": "stated",
+   "confidence": 0.839
+  },
+  {
+   "kind": "insight",
+   "title": "Blender's small scale limits its impact",
+   "description": "The speaker notes that Blender is currently too small to have a meaningful impact in the corporate-driven development of the next internet, despite its potential.",
+   "quote": "Blender is still super small, and I don't think I can make any difference there.",
+   "start_ms": 325028,
+   "evidence": [
+    {
+     "from_idx": 46,
+     "to_idx": 46,
+     "start_ms": 325028,
+     "end_ms": 336168
+    }
+   ],
+   "grounding": "stated",
+   "confidence": 0.735
+  },
+  {
+   "kind": "recommendation",
+   "title": "Trust open-source communities over corporations",
+   "description": "The speaker suggests that open-source communities, like Blender, should be trusted to develop the next internet rather than large corporations.",
+   "quote": "because who do you really trust to make the next Internet?",
+   "start_ms": 351568,
+   "evidence": [
+    {
+     "from_idx": 49,
+     "to_idx": 49,
+     "start_ms": 351568,
+     "end_ms": 356128
+    }
+   ],
+   "grounding": "interpretation",
+   "confidence": 0.549
+  }
+ ],
+ "topics": [
+  {
+   "name": "3D Internet and Metaverse",
+   "slug": "3d-internet-and-metaverse",
+   "description": "stated: The talk discusses the concept of a 3D internet and the Metaverse as interconnected digital spaces.",
+   "weight": 0.0435,
+   "mentions": [
+    {
+     "start_ms": 251268,
+     "end_ms": 257368,
+     "first_idx": 32,
+     "last_idx": 32
+    },
+    {
+     "start_ms": 292188,
+     "end_ms": 298608,
+     "first_idx": 39,
+     "last_idx": 39
+    }
+   ]
+  },
+  {
+   "name": "Climate Change",
+   "slug": "climate-change",
+   "description": "stated: The talk addresses the challenges and impacts of climate change on the environment and society.",
+   "weight": 0.0265,
+   "mentions": [
+    {
+     "start_ms": 177468,
+     "end_ms": 185108,
+     "first_idx": 21,
+     "last_idx": 21
+    }
+   ]
+  },
+  {
+   "name": "Open-Source",
+   "slug": "open-source",
+   "description": "stated: The talk highlights the role and importance of open-source technologies in innovation and collaboration.",
+   "weight": 0.0159,
+   "mentions": [
+    {
+     "start_ms": 277868,
+     "end_ms": 282448,
+     "first_idx": 36,
+     "last_idx": 36
+    }
+   ]
+  }
+ ],
+ "models": {
+  "map": "qwen3:4b",
+  "reduce": "qwen3:8b",
+  "embedding": "qwen3-embedding:0.6b"
+ },
+ "prompt_version": "v1",
+ "quality": {
+  "words": 763,
+  "segments": 51,
+  "chunks": 1,
+  "topic_boundaries": 5,
+  "map_failed": 0,
+  "takeaway_candidates": 2,
+  "highlights": {
+   "candidates": 3,
+   "duplicates": 0,
+   "quotes_replaced": 2
+  },
+  "keyphrases": 4,
+  "phrase_clusters": 3,
+  "takeaways_reduce": {
+   "levels": 1,
+   "fallback": false
+  },
+  "summary_failed": false,
+  "chapters_fallback": false,
+  "chapter_proposals": 8,
+  "topics_fallback": false,
+  "grounding": {
+   "summary_points": {
+    "checked": 5,
+    "supported": 3,
+    "downgraded": 1,
+    "dropped": 1,
+    "support_rate": 0.6,
+    "drop_rate": 0.2,
+    "semantic_median": 0.5887
+   },
+   "takeaways": {
+    "checked": 5,
+    "supported": 3,
+    "downgraded": 0,
+    "dropped": 0,
+    "support_rate": 0.6,
+    "drop_rate": 0.0,
+    "semantic_median": 0.5604
+   },
+   "highlights": {
+    "checked": 3,
+    "supported": 2,
+    "downgraded": 1,
+    "dropped": 0,
+    "support_rate": 0.6667,
+    "drop_rate": 0.0,
+    "semantic_median": 0.7353
+   }
+  },
+  "citation_validity": {
+   "citations": 19,
+   "valid": 19,
+   "rate": 1.0
+  },
+  "llm": {
+   "calls": 5,
+   "cache_hits": 0,
+   "repaired": 0,
+   "failed": 0,
+   "input_tokens": 3459,
+   "output_tokens": 2013,
+   "schema_failure_rate": 0.0,
+   "repair_rate": 0.0
+  }
+ }
+}

@@ -4,29 +4,32 @@ Each record covers the context, the decision, the alternatives considered and th
 
 Architecture approved on 2026-11-21 with the recommended defaults: ADR-003 and ADR-012 accepted, a seeded dev user instead of real auth until Phase 5, and the project moved to `~/code`. Phase 1 spikes validated ADR-005 and ADR-010 (results in [BENCHMARKS.md](BENCHMARKS.md)).
 
-| ADR | Title                                                                  | Status                                   |
-| --- | ---------------------------------------------------------------------- | ---------------------------------------- |
-| 001 | Monorepo with pnpm workspaces + uv                                     | Accepted                                 |
-| 002 | Modular monolith with selective Clean Architecture                     | Accepted                                 |
-| 003 | Python AI service writes its own artifacts directly to Postgres        | Accepted (2026-11-21)                    |
-| 004 | Native host AI inference locally, containerized everything else        | Accepted                                 |
-| 005 | BullMQ as the cross-language queue (Node producer, Python consumer)    | **Accepted: Spike A passed 7/7**         |
-| 006 | Pipeline as chained per-stage BullMQ jobs                              | Accepted                                 |
-| 007 | LangGraph for LLM workflows only, not durable job orchestration        | Accepted                                 |
-| 008 | Hierarchical map-reduce summarization over full-context prompting      | Accepted (quality comparison in Phase 4) |
-| 009 | Ollama behind an OpenAI-compatible client abstraction                  | Accepted                                 |
-| 010 | Local model selection for 16 GB Apple Silicon                          | **Accepted: Spike B measured**           |
-| 011 | Drizzle ORM with SQL migrations as the single schema source            | Accepted                                 |
-| 012 | YouTube ingestion only through authorized methods                      | Accepted (2026-11-21)                    |
-| 013 | Direct-to-S3 multipart uploads via presigned URLs                      | Accepted (local store per ADR-020)       |
-| 014 | Hybrid retrieval (pgvector + Postgres FTS) instead of a vector DB      | Accepted                                 |
-| 015 | Segment-ID citations instead of LLM-generated timestamps               | Accepted                                 |
-| 016 | JSON Schema contracts for cross-language messages                      | Accepted (introduced in Phase 2)         |
-| 017 | Auth implemented in NestJS (JWT + rotating refresh tokens)             | Accepted (deferred to Phase 5)           |
-| 018 | SSE for progress and streaming answers (not WebSockets)                | Accepted                                 |
-| 019 | Python 3.12 via uv, not system Python 3.15                             | Accepted                                 |
-| 020 | SeaweedFS as the local S3-compatible store (MinIO images discontinued) | Accepted (Phase 1)                       |
-| 021 | NestJS 12 (ESM) + TypeScript 6 + Vitest + oxlint                       | Accepted (Phase 1)                       |
+| ADR | Title                                                                  | Status                             |
+| --- | ---------------------------------------------------------------------- | ---------------------------------- |
+| 001 | Monorepo with pnpm workspaces + uv                                     | Accepted                           |
+| 002 | Modular monolith with selective Clean Architecture                     | Accepted                           |
+| 003 | Python AI service writes its own artifacts directly to Postgres        | Accepted (2026-11-21)              |
+| 004 | Native host AI inference locally, containerized everything else        | Accepted                           |
+| 005 | BullMQ as the cross-language queue (Node producer, Python consumer)    | **Accepted: Spike A passed 7/7**   |
+| 006 | Pipeline as chained per-stage BullMQ jobs                              | Accepted                           |
+| 007 | LangGraph for LLM workflows only, not durable job orchestration        | Accepted                           |
+| 008 | Hierarchical map-reduce summarization over full-context prompting      | **Accepted: Phase 4 comparison**   |
+| 009 | Ollama behind an OpenAI-compatible client abstraction                  | Accepted                           |
+| 010 | Local model selection for 16 GB Apple Silicon                          | **Accepted: Spike B measured**     |
+| 011 | Drizzle ORM with SQL migrations as the single schema source            | Accepted                           |
+| 012 | YouTube ingestion only through authorized methods                      | Accepted (2026-11-21)              |
+| 013 | Direct-to-S3 multipart uploads via presigned URLs                      | Accepted (local store per ADR-020) |
+| 014 | Hybrid retrieval (pgvector + Postgres FTS) instead of a vector DB      | Accepted                           |
+| 015 | Segment-ID citations instead of LLM-generated timestamps               | Accepted                           |
+| 016 | JSON Schema contracts for cross-language messages                      | Accepted (introduced in Phase 2)   |
+| 017 | Auth implemented in NestJS (JWT + rotating refresh tokens)             | Accepted (deferred to Phase 5)     |
+| 018 | SSE for progress and streaming answers (not WebSockets)                | Accepted                           |
+| 019 | Python 3.12 via uv, not system Python 3.15                             | Accepted                           |
+| 020 | SeaweedFS as the local S3-compatible store (MinIO images discontinued) | Accepted (Phase 1)                 |
+| 021 | NestJS 12 (ESM) + TypeScript 6 + Vitest + oxlint                       | Accepted (Phase 1)                 |
+| 022 | Phase 2 implementation decisions                                       | Accepted (Phase 2)                 |
+| 023 | Transcription design                                                   | Accepted (Phase 3)                 |
+| 024 | Analysis design (intelligence reports)                                 | Accepted (Phase 4)                 |
 
 ---
 
@@ -331,3 +334,28 @@ Decisions made while building ingestion. Each one came from a measured problem o
 10. **The WER evaluation runs through the production path**, not raw Whisper, with Whisper's own text normalizers (the standard convention for reporting Whisper WER).
 
 **Known limitation.** OpenCV and PyAV both bundle `libavdevice`, so macOS prints a duplicate Objective-C class warning when both load in one worker. The duplicated classes are only for AVFoundation capture devices, which the pipeline never uses. If it ever causes trouble, the fix is to run the VAD through `onnxruntime` directly without importing `faster_whisper`.
+
+---
+
+## ADR-024: Analysis design (intelligence reports)
+
+**Context.** Phase 4 turns a transcript into a report (executive summary, key points, takeaways, chapters, highlights, topics) with small local models (Qwen3 4B/8B on 16 GB), and every timestamp a user sees must come from a real segment (ADR-015). The ROADMAP exit criterion is 100% of persisted citations resolving, checked deterministically.
+
+**Decisions.**
+
+1. **One `analyze_transcript` stage on `vip-gpu`**, built as a LangGraph graph (ADR-007): `prepare → map (Send per chunk) → aggregate → cluster_topics → takeaways → summary → chapters → name_topics → verify → assemble`. Nodes are thin adapters over plain typed functions; the graph runs one map at a time locally (`map_concurrency`) and the same graph can fan out against a parallel inference server.
+2. **Model calls are grouped by model**: embeddings (segments) → Qwen3 4B (map) → embeddings (key phrases) → Qwen3 8B (reduce) → embeddings (grounding). With `OLLAMA_MAX_LOADED_MODELS=1` that's four model swaps per video, a few seconds each.
+3. **The LLM client owns the guarantees** (`vip_ai/llm`): JSON-schema `format`, explicit `num_ctx`, `think: false`, temperature 0.1, fixed seed, an output-token cap (truncation is detected and treated as invalid), Pydantic plus semantic validators with up to 2 repair turns, one `llm_calls` row and one OTel span per call. Transport errors retry 3 times (1/4/10 s) and then surface as a retryable `LLM_UNAVAILABLE`.
+4. **Content-addressed cache of validated outputs in S3** (`llm-cache/{sha256}.json`, keyed by model, prompt version, messages, schema and options). A redelivered stage or a rerun after an Ollama restart replays finished calls; any prompt or model change misses automatically. Resume comes from this cache, not LangGraph checkpoints.
+5. **Citations are numbers code handed out.** The map step cites `S{idx}` ids of its own chunk (its read-only context overlap can't be cited); reduce steps cite candidate (`C#`) or evidence (`E#`) numbers, which code maps back to segment ids. Evidence is stored as ranges of _adjacent_ cited segments, so a range never covers an uncited segment.
+6. **Salvage instead of discard.** If a map output is schema-valid but some citations stay invalid after repairs, the invalid items are dropped and the rest kept (`quality.map_salvaged`). Reduce steps have deterministic fallbacks (spread candidates, proposal titles, most-cited phrase), so a bad model answer yields a partial report, not a failed job. Only "no chunk produced valid notes" fails the stage (`ANALYSIS_FAILED`, permanent).
+7. **Chapters: code picks where, the model writes what.** Proposals come from map-step section starts plus TextTiling-style topic shifts over segment embeddings. Code selects about one start per 3 minutes, best-scored first and spread at least `duration / (2 × count)` apart, then enforces contiguity, a minimum length and full coverage; the 8B model only titles and describes the chosen spans. Letting the model choose among proposals was tried first: it skipped most middle proposals (chapter F1 0.55 and 0.25 on two golden talks). Code selection matched that accuracy while always covering the whole talk, and one chapter per 3 minutes (instead of 4) raised the golden mean F1 from 0.33 to 0.40.
+8. **Highlights need no extra call**: map-step candidates are de-duplicated in code, and each quote is checked to be verbatim (ignoring case and punctuation) against the cited segments and replaced by the best-matching cited segment when it isn't.
+9. **Topics**: key phrases → embeddings → average-linkage clustering (cosine distance ≤ 0.4) → the 8B model names the clusters. Mentions and weights come from the phrases' cited segments, so they are grounded by construction.
+10. **Grounding verification** per summary point, takeaway and highlight: semantic (max cosine to the cited segments) and lexical (content-word overlap) support. Weak `stated` items are downgraded to `interpretation`; items unrelated to their citations are dropped. Rates go into `intelligence_reports.quality`.
+11. **Too little speech** (< 40 words) produces an empty report without calling a model, so silent or music-only videos still finish.
+12. **Replay backend for CI and demos** (`LLM_BACKEND=replay`): recorded raw responses keyed by the exact request. Golden-output snapshot tests and stage integration tests run the whole graph without a model server; Settings refuse `replay` in production.
+
+**Measured (BENCHMARKS.md, Phase 4).** On the four-talk golden set: 100% citation validity, 0% schema failures, 63% key-point coverage, 76% of items fully supported (94% at least partly) by their citations according to a local judge, chapter F1 0.40 at ±30 s. A 68-minute talk takes about 9.5 minutes to analyze. The Qwen3 8B map step and a single full-context call both covered fewer key points than 4B map-reduce on a 19-minute talk (27% and 36% vs 73%; one talk, indicative only), so ADR-008 and ADR-010's defaults stay.
+
+**Known limitations.** Reference labels were written by Claude from the transcripts, not by humans, and the same set was used to tune chapter settings. The judge is from the generator's model family. Topic weights are small (share of speech time in the segments that key phrases cite), so they rank topics but don't measure them. Reports are written in the transcript's language; only English talks were evaluated.

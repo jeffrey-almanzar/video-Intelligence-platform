@@ -1,0 +1,88 @@
+{
+ "name": "2026-11-22-blender-map8b",
+ "report_suffix": "map8b",
+ "judge": {
+  "model": "qwen3:8b",
+  "prompt_version": "judge-v1"
+ },
+ "summary": {
+  "chapter_f1": 0.3077,
+  "key_point_coverage": 0.2727,
+  "groundedness_supported": 0.65,
+  "groundedness_supported_or_partial": 0.9,
+  "citation_validity": 1.0,
+  "schema_failure_rate": 0.0,
+  "repair_rate": 0.0
+ },
+ "videos": {
+  "blender-keynote-2022": {
+   "minutes": 19.1,
+   "analysis_seconds": 331.5,
+   "chapters": {
+    "precision": 0.4,
+    "recall": 0.25,
+    "f1": 0.3077,
+    "matched": 2,
+    "predicted": 5,
+    "reference": 8
+   },
+   "coverage": {
+    "points": 11,
+    "covered": 3,
+    "rate": 0.2727,
+    "per_point": [
+     false,
+     false,
+     false,
+     true,
+     false,
+     false,
+     true,
+     false,
+     false,
+     false,
+     true
+    ]
+   },
+   "groundedness": {
+    "items": 20,
+    "supported": 13,
+    "partial": 5,
+    "unsupported": 2,
+    "supported_rate": 0.65,
+    "supported_or_partial_rate": 0.9
+   },
+   "citation_validity": {
+    "citations": 40,
+    "valid": 40,
+    "rate": 1.0
+   },
+   "llm": {
+    "calls": 6,
+    "cache_hits": 0,
+    "repaired": 0,
+    "failed": 0,
+    "input_tokens": 8651,
+    "output_tokens": 5337,
+    "llm_seconds": 323.2,
+    "schema_failure_rate": 0.0,
+    "repair_rate": 0.0
+   },
+   "counts": {
+    "summary_points": 5,
+    "takeaways": 5,
+    "chapters": 6,
+    "highlights": 10,
+    "topics": 9
+   },
+   "models": {
+    "map": "qwen3:8b",
+    "reduce": "qwen3:8b",
+    "embedding": "qwen3-embedding:0.6b"
+   }
+  }
+ },
+ "labels": "written by Claude from the transcripts before reports existed; not human-reviewed",
+ "machine": "macOS-26.6.2-arm64-arm-64bit",
+ "date": "2026-11-23T01:58:34+00:00"
+}

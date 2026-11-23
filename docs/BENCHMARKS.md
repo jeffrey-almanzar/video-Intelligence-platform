@@ -152,3 +152,53 @@ Timestamps were monotonic and non-overlapping in every run. VAD takes about 0.24
 Upload (29 MiB) → probe → extract → scenes → **transcribe 252.7 s** → finalize: **4 min 20 s** in total. Through `GET /v1/videos/:id/transcript`: 524 segments, contiguous ids, non-overlapping, within the duration, **WER 1.78%**.
 
 **Crash resume:** `kill -9` on the worker after 2 of the 5 windows. Attempt 2 reused both checkpoints and decoded only 3 windows (122 s). The job succeeded with a single transcript.
+
+---
+
+## Phase 4: intelligence reports
+
+**Setup:** the `analyze_transcript` graph (ADR-024) with Qwen3 4B for map, Qwen3 8B for reduce and Qwen3-Embedding 0.6B, through Ollama 0.40.17 (`num_ctx` 8192, `think: false`, temperature 0.1). M1 Pro / 16 GB, measured 2026-11-22. Raw results: `evals/results/analysis/`.
+
+**Golden set:** four CC BY 3.0 talks from Wikimedia Commons (`evals/golden/manifest.json`), 164 minutes in all. Reference chapters and key points (`evals/golden/*.labels.json`) were **written by Claude from the Whisper transcripts before any report was generated, and are not human-reviewed**. The same four talks were also used to tune the chapter settings, so this is a development set, not a held-out test set.
+
+**Judge:** Qwen3 8B (`judge-v1`, temperature 0), one call per reference key point (coverage) and one per report item (groundedness). It belongs to the same model family as the generator, which likely biases it in the generator's favour; treat the LLM-judged numbers as relative, not absolute.
+
+### Report quality (final configuration)
+
+| Talk                                     | Minutes | Analysis time (per minute of video) | LLM calls | Chapter F1 ±30 s       | Key-point coverage | Grounded: supported / incl. partial | Citations valid |
+| ---------------------------------------- | ------- | ----------------------------------- | --------- | ---------------------- | ------------------ | ----------------------------------- | --------------- |
+| Blender keynote                          | 19.1    | 220 s (11.5 s)                      | 6         | 0.62                   | 8/11 (73%)         | 57% / 95%                           | 27/27           |
+| CopyrightX lecture                       | 27.5    | 325 s (11.8 s)                      | 8         | 0.32                   | 8/12 (67%)         | 85% / 92%                           | 44/44           |
+| Yale music lecture (long music excerpts) | 49.0    | 398 s (8.1 s)                       | 10        | 0.26                   | 9/15 (60%)         | 73% / 94%                           | 60/60           |
+| Maher keynote + 36 min Q&A               | 68.0    | 571 s (8.4 s)                       | 13        | 0.40                   | 9/17 (53%)         | 89% / 96%                           | 83/83           |
+| **Mean**                                 |         |                                     |           | **0.40** (±60 s: 0.65) | **63%**            | **76% / 94%**                       | **100%**        |
+
+Schema-failure rate 0% and repair rate 0% across all 37 calls (after the fixes below). Reproduce: `make eval-golden-data`, then `make eval-analysis`.
+
+### What the numbers changed
+
+| Change                                                                         | Measured effect                                                                                                                                                                            |
+| ------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Section start field `start` → `start_segment_id` (with an example)             | The 4B model had numbered sections 0, 1, 2… and kept doing so through both repairs, so a whole CopyrightX chunk was discarded (1 failed call of 8). After the rename: 0 failed calls in 37 |
+| Chapter starts chosen by the 8B model among proposals                          | Chapter F1 0.55 (Blender) and 0.25 (CopyrightX); the model skipped most middle proposals                                                                                                   |
+| Code picks chapter starts (spread rule), 8B titles them, one chapter per 4 min | Golden mean F1 0.33 (±60 s: 0.56). Same accuracy as model selection, but chapters always cover the whole talk                                                                              |
+| One chapter per 3 min (shipped)                                                | Golden mean F1 **0.40** (±60 s: **0.65**). Spread `duration/(3 × count)` gave 0.40 / 0.60; 4 min with spread 3 gave 0.40 / 0.55                                                            |
+
+### Model and strategy comparison (Blender keynote, 19 min; n = 1, indicative only)
+
+| Variant                                       | Analysis time | Chapter F1 | Key-point coverage | Grounded: supported / incl. partial | Highlights |
+| --------------------------------------------- | ------------- | ---------- | ------------------ | ----------------------------------- | ---------- |
+| **Qwen3 4B map, map-reduce (shipped)**        | 220 s         | 0.62       | **73%**            | 57% / 95%                           | 10         |
+| Qwen3 8B map, map-reduce                      | 332 s         | 0.31       | 27%                | 65% / 90%                           | 10         |
+| Qwen3 4B, full context (one 12k-context call) | 157 s         | 0.46       | 36%                | 53% / 80%                           | 4          |
+
+The 8B map step wrote noticeably more generic notes ("community and collaboration") and dropped the talk's specific announcements, which is what the coverage judge penalised. Full context was faster on this short talk, but a single call yields at most one chunk's worth of candidates (5 takeaways, 5 highlights), so coverage falls. ADR-008's map-reduce and ADR-010's 4B map default stay; there's no evidence yet for a short-video full-context threshold.
+
+### End to end through the full stack (68-min talk, with injected failures)
+
+Upload (819.5 MiB) → probe → extract → scenes (94 s) → transcribe (286 s) → **analyze** → finalize: **17 min 10 s** from upload completion to published, _including_ the two failures below. The analysis on its own takes about 9.5 min on this talk (measured offline).
+
+Through `GET /v1/videos/:id/report` and the transcript API: **79/79 cited ranges and 29/29 topic mentions resolve to real segments** with matching timestamps; 15 chapters, contiguous from 0 to the end of the video; 9 takeaways, 29 highlights, 10 topics.
+
+- **Ollama restarted mid-map** (`brew services restart ollama` during chunk 2 of 8): the in-flight request failed, one retry failed while Ollama was coming up, the next succeeded. No stage failure; that chunk took 60 s instead of ~40 s.
+- **Worker `kill -9` after the takeaways reduce:** BullMQ redelivered the stage 70 s later; attempt 2 served all 9 finished calls (8 map + 1 reduce) from the S3 cache in under 1 s and made only the 3 remaining calls (2 min). One report, video published.

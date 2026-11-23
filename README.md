@@ -10,13 +10,16 @@ The project is also a deliberate engineering exercise. It is meant to show **str
 
 ## Status
 
-| Phase | Scope                                                                             | Status                 |
-| ----- | --------------------------------------------------------------------------------- | ---------------------- |
-| 0     | Architecture & documentation                                                      | ✅ Approved 2026-11-21 |
-| 1     | Foundation (repo, Docker Compose, NestJS, FastAPI, health checks, spikes)         | ✅ Done                |
-| 2–7   | Ingestion → Transcription → AI Intelligence → Frontend → Advanced AI → Production | ⏳ Not started         |
+| Phase | Scope                                                                     | Status                 |
+| ----- | ------------------------------------------------------------------------- | ---------------------- |
+| 0     | Architecture & documentation                                              | ✅ Approved 2026-11-21 |
+| 1     | Foundation (repo, Docker Compose, NestJS, FastAPI, health checks, spikes) | ✅ Done                |
+| 2     | Video ingestion (multipart upload, staged pipeline, progress over SSE)    | ✅ Done                |
+| 3     | Transcription (VAD, windowed MLX Whisper, WER baselines)                  | ✅ Done                |
+| 4     | AI intelligence (map-reduce analysis graph, cited reports, eval harness)  | ✅ Done                |
+| 5–7   | Frontend → Advanced AI → Production                                       | ⏳ Not started         |
 
-Phase 1 delivered the running skeleton: infrastructure, API and AI service health checks, CI, and two spikes that validated the cross-language queue and local inference ([docs/BENCHMARKS.md](docs/BENCHMARKS.md)). Phase 2 added video ingestion and Phase 3 added transcription: upload a video with `make upload FILE=...`, watch it get processed, and read its transcript at `/v1/videos/:id/transcript`. See [docs/ROADMAP.md](docs/ROADMAP.md).
+Phase 1 delivered the running skeleton: infrastructure, API and AI service health checks, CI, and two spikes that validated the cross-language queue and local inference ([docs/BENCHMARKS.md](docs/BENCHMARKS.md)). Phase 2 added video ingestion, Phase 3 transcription and Phase 4 the intelligence report: upload a video with `make upload FILE=...`, watch it get processed, then read its transcript at `/v1/videos/:id/transcript` and its report (summary, takeaways, chapters, highlights, topics, every item cited to transcript segments) at `/v1/videos/:id/report`. See [docs/ROADMAP.md](docs/ROADMAP.md).
 
 ---
 
