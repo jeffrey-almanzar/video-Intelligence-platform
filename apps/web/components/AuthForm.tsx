@@ -1,8 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { type FormEvent, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { type FormEvent, useEffect, useState } from 'react';
 import { ApiError, api, json } from '@/lib/api';
 import styles from './AuthForm.module.css';
 
@@ -13,9 +13,11 @@ function safeNext(next: string | null): string {
 
 export function AuthForm({ mode }: { mode: 'login' | 'register' }) {
   const router = useRouter();
-  const params = useSearchParams();
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  // Until React is interactive, submitting would fall back to a native form post: keep it off.
+  const [ready, setReady] = useState(false);
+  useEffect(() => setReady(true), []);
   const register = mode === 'register';
 
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
@@ -29,7 +31,9 @@ export function AuthForm({ mode }: { mode: 'login' | 'register' }) {
         [...form].filter(([, v]) => typeof v === 'string' && v.trim() !== ''),
       );
       await api(`/v1/auth/${mode}`, json(body));
-      router.replace(safeNext(params.get('next')));
+      // Read at submit time (not with useSearchParams): that hook needs a Suspense boundary,
+      // which can remount the form after it first renders and wipe what the user already typed.
+      router.replace(safeNext(new URLSearchParams(window.location.search).get('next')));
       router.refresh();
     } catch (err) {
       setError(
@@ -55,7 +59,7 @@ export function AuthForm({ mode }: { mode: 'login' | 'register' }) {
             ? 'Upload a talk, and get a summary, chapters and answers you can check against the moment they come from.'
             : 'Pick up where you left off in your video library.'}
         </p>
-        <form onSubmit={onSubmit} className={styles.form} noValidate={false}>
+        <form onSubmit={onSubmit} method="post" className={styles.form}>
           {register && (
             <label className="field">
               Name <span className={styles.optional}>(optional)</span>
@@ -87,7 +91,7 @@ export function AuthForm({ mode }: { mode: 'login' | 'register' }) {
               {error}
             </p>
           )}
-          <button className="btn" type="submit" disabled={busy}>
+          <button className="btn" type="submit" disabled={busy || !ready}>
             {busy
               ? register
                 ? 'Creating account…'
