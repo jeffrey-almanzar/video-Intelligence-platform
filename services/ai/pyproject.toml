@@ -75,7 +75,7 @@ packages = ["vip_ai"]
 mypy_path = "src"
 
 [[tool.mypy.overrides]]
-module = ["bullmq.*", "mlx_whisper.*", "boto3.*", "botocore.*", "scenedetect.*", "faster_whisper.*", "whisper_normalizer.*", "jiwer.*"]
+module = ["bullmq.*", "mlx.*", "mlx_whisper.*", "boto3.*", "botocore.*", "scenedetect.*", "faster_whisper.*", "whisper_normalizer.*", "jiwer.*"]
 ignore_missing_imports = true
 
 [tool.pytest.ini_options]
