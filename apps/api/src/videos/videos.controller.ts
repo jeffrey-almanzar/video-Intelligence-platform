@@ -94,6 +94,12 @@ export class VideosController {
     return this.videos.abortUpload(videoId, user.userId);
   }
 
+  /** A presigned, time-limited URL for the player (the proxy when one exists). */
+  @Get(':videoId/playback')
+  playback(@Param('videoId', videoIdParam) videoId: string, @CurrentUser() user: AuthUser) {
+    return this.videos.playback(videoId, user.userId);
+  }
+
   /** Authoritative processing status from Postgres (the SSE stream is best-effort). */
   @Get(':videoId/status')
   status(@Param('videoId', videoIdParam) videoId: string, @CurrentUser() user: AuthUser) {

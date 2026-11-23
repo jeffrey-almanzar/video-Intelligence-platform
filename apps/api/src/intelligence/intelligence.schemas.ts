@@ -23,3 +23,9 @@ export const reportQuerySchema = z.object({
     .optional(),
 });
 export type ReportQuery = z.infer<typeof reportQuerySchema>;
+
+export const searchQuerySchema = z.object({
+  q: z.string().trim().min(1).max(200),
+  limit: z.coerce.number().int().min(1).max(200).default(50),
+});
+export type SearchQuery = z.infer<typeof searchQuerySchema>;

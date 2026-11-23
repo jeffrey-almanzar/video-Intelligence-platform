@@ -1,5 +1,5 @@
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
-import { and, asc, eq, gt, inArray, lt } from 'drizzle-orm';
+import { and, asc, eq, gt, inArray, lt, sql } from 'drizzle-orm';
 import { DB, type Database } from '../db/db.module.js';
 import {
   chapters,
@@ -13,7 +13,9 @@ import {
   transcriptSegments,
 } from '../db/schema/index.js';
 import { VideosService } from '../videos/videos.service.js';
-import type { ReportQuery, TranscriptQuery } from './intelligence.schemas.js';
+import { toWebVtt } from './domain/captions.js';
+import { prefixTsQuery } from './domain/search.js';
+import type { ReportQuery, SearchQuery, TranscriptQuery } from './intelligence.schemas.js';
 
 export type TranscriptView = {
   transcript: {
@@ -34,6 +36,12 @@ export type TranscriptView = {
   }[];
   /** Pass as `afterIdx` to fetch the next page; null when there are no more segments. */
   nextCursor: number | null;
+};
+
+export type SearchView = {
+  query: string;
+  total: number;
+  segments: { idx: number; startMs: number; endMs: number; text: string }[];
 };
 
 export type Evidence = { fromIdx: number; toIdx: number; startMs: number; endMs: number };
@@ -267,5 +275,53 @@ export class IntelligenceService {
             })),
         })),
     };
+  }
+
+  /** WebVTT captions of the published transcript, for the player's <track>. */
+  async captions(videoId: string, ownerId: string): Promise<string> {
+    const transcriptId = await this.publishedTranscriptId(videoId, ownerId);
+    const rows = await this.db
+      .select({
+        idx: transcriptSegments.idx,
+        startMs: transcriptSegments.startMs,
+        endMs: transcriptSegments.endMs,
+        text: transcriptSegments.text,
+      })
+      .from(transcriptSegments)
+      .where(eq(transcriptSegments.transcriptId, transcriptId))
+      .orderBy(asc(transcriptSegments.idx));
+    return toWebVtt(rows);
+  }
+
+  /** Full-text search over the published transcript (every word, as a prefix), in time order. */
+  async search(videoId: string, ownerId: string, q: SearchQuery): Promise<SearchView> {
+    const transcriptId = await this.publishedTranscriptId(videoId, ownerId);
+    const query = prefixTsQuery(q.q);
+    if (!query) return { query: q.q, total: 0, segments: [] };
+    const match = sql`${transcriptSegments.tsv} @@ to_tsquery('simple', ${query})`;
+    const rows = await this.db
+      .select({
+        idx: transcriptSegments.idx,
+        startMs: transcriptSegments.startMs,
+        endMs: transcriptSegments.endMs,
+        text: transcriptSegments.text,
+      })
+      .from(transcriptSegments)
+      .where(and(eq(transcriptSegments.transcriptId, transcriptId), match))
+      .orderBy(asc(transcriptSegments.idx))
+      .limit(q.limit);
+    return { query: q.q, total: rows.length, segments: rows };
+  }
+
+  private async publishedTranscriptId(videoId: string, ownerId: string): Promise<string> {
+    const video = await this.videos.ownedVideo(videoId, ownerId);
+    if (!video.activeJobId)
+      throw new NotFoundException('no transcript yet: the video has not finished processing');
+    const [t] = await this.db
+      .select({ id: transcripts.id })
+      .from(transcripts)
+      .where(eq(transcripts.jobId, video.activeJobId));
+    if (!t) throw new NotFoundException('no transcript for this video');
+    return t.id;
   }
 }

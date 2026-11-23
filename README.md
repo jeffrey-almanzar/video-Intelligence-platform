@@ -10,16 +10,17 @@ The project is also a deliberate engineering exercise. It is meant to show **str
 
 ## Status
 
-| Phase | Scope                                                                     | Status                 |
-| ----- | ------------------------------------------------------------------------- | ---------------------- |
-| 0     | Architecture & documentation                                              | ✅ Approved 2026-11-21 |
-| 1     | Foundation (repo, Docker Compose, NestJS, FastAPI, health checks, spikes) | ✅ Done                |
-| 2     | Video ingestion (multipart upload, staged pipeline, progress over SSE)    | ✅ Done                |
-| 3     | Transcription (VAD, windowed MLX Whisper, WER baselines)                  | ✅ Done                |
-| 4     | AI intelligence (map-reduce analysis graph, cited reports, eval harness)  | ✅ Done                |
-| 5–7   | Frontend → Advanced AI → Production                                       | ⏳ Not started         |
+| Phase | Scope                                                                       | Status                 |
+| ----- | --------------------------------------------------------------------------- | ---------------------- |
+| 0     | Architecture & documentation                                                | ✅ Approved 2026-11-21 |
+| 1     | Foundation (repo, Docker Compose, NestJS, FastAPI, health checks, spikes)   | ✅ Done                |
+| 2     | Video ingestion (multipart upload, staged pipeline, progress over SSE)      | ✅ Done                |
+| 3     | Transcription (VAD, windowed MLX Whisper, WER baselines)                    | ✅ Done                |
+| 4     | AI intelligence (map-reduce analysis graph, cited reports, eval harness)    | ✅ Done                |
+| 5     | Frontend (auth, upload, live processing, report dashboard, baseline Ask AI) | ✅ Done                |
+| 6–7   | Advanced AI → Production                                                    | ⏳ Not started         |
 
-Phase 1 delivered the running skeleton: infrastructure, API and AI service health checks, CI, and two spikes that validated the cross-language queue and local inference ([docs/BENCHMARKS.md](docs/BENCHMARKS.md)). Phase 2 added video ingestion, Phase 3 transcription and Phase 4 the intelligence report: upload a video with `make upload FILE=...`, watch it get processed, then read its transcript at `/v1/videos/:id/transcript` and its report (summary, takeaways, chapters, highlights, topics, every item cited to transcript segments) at `/v1/videos/:id/report`. See [docs/ROADMAP.md](docs/ROADMAP.md).
+Phase 1 delivered the running skeleton: infrastructure, API and AI service health checks, CI, and two spikes that validated the cross-language queue and local inference ([docs/BENCHMARKS.md](docs/BENCHMARKS.md)). Phases 2–5 built the product end to end: sign up at http://localhost:4000 (`make web`), drop in a video, watch it process live, then explore its report on a single time axis (summary, takeaways, chapters, highlights, topics and a searchable transcript, every item linked to the moment it comes from) and ask questions whose answers cite playable timestamps. Scripts can use the same API (`make upload FILE=...`). See [docs/ROADMAP.md](docs/ROADMAP.md).
 
 ---
 

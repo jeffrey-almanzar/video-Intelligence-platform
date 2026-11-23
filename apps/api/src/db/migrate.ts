@@ -5,8 +5,9 @@
  *   1. Apply SQL migrations (as the schema owner, MIGRATION_DATABASE_URL).
  *   2. Ensure the service login users exist and belong to their group roles (ADR-003).
  *      User names and passwords are taken from API_DATABASE_URL / AI_DATABASE_URL.
- *   3. Optionally seed the development user (SEED_DEV_USER=true), used until auth lands in Phase 5.
+ *   3. Optionally seed the development user (SEED_DEV_USER=true; DEV_USER_PASSWORD lets it sign in locally).
  */
+import { hash } from '@node-rs/argon2';
 import path from 'node:path';
 import { drizzle } from 'drizzle-orm/node-postgres';
 import { migrate } from 'drizzle-orm/node-postgres/migrator';
@@ -54,7 +55,17 @@ async function seedDevUser(): Promise<void> {
      ON CONFLICT (id) DO NOTHING`,
     [id, email],
   );
-  console.log(`Dev user ensured: ${email} (${id})`);
+  // Local development only: give the dev user a password so it can sign in (ADR-017). Its
+  // earlier videos stay reachable. Never in production, and an existing password is kept.
+  const password = process.env.DEV_USER_PASSWORD;
+  if (password && process.env.NODE_ENV !== 'production') {
+    const passwordHash = await hash(password, { memoryCost: 19_456, timeCost: 2, parallelism: 1 });
+    await pool.query(
+      'UPDATE users SET password_hash = $2 WHERE id = $1 AND password_hash IS NULL',
+      [id, passwordHash],
+    );
+  }
+  console.log(`Dev user ensured: ${email} (${id})${password ? ', password set if missing' : ''}`);
 }
 
 try {

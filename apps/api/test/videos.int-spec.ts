@@ -16,13 +16,11 @@ if (existsSync(envFile)) process.loadEnvFile(envFile);
 process.env.NODE_ENV = 'test'; // disables the reconciler timer; tests call reconcileOnce()
 process.env.LOG_LEVEL = 'warn';
 process.env.QUEUE_PREFIX = 'bull-test'; // a local worker must never consume test jobs
-process.env.SEED_DEV_USER = 'true';
 
 const { AppModule } = await import('../src/app.module.js');
 const { ReconcilerService } = await import('../src/processing/reconciler.service.js');
 const { QueueProducer } = await import('../src/processing/queue.producer.js');
 
-const DEV_USER = process.env.DEV_USER_ID ?? '00000000-0000-7000-8000-000000000001';
 const MiB = 1024 * 1024;
 
 /**
@@ -31,7 +29,9 @@ const MiB = 1024 * 1024;
  */
 describe('Videos, uploads and processing (integration)', () => {
   let app: INestApplication<App>;
-  let http: ReturnType<typeof request>;
+  let http: ReturnType<typeof request.agent>;
+  /** The `vip_at` access cookie, for raw fetch() calls outside the supertest agent. */
+  let accessCookie: string;
   let owner: pg.Pool;
   let reconciler: InstanceType<typeof ReconcilerService>;
   let queue: InstanceType<typeof QueueProducer>;
@@ -39,15 +39,18 @@ describe('Videos, uploads and processing (integration)', () => {
 
   beforeAll(async () => {
     owner = new pg.Pool({ connectionString: process.env.MIGRATION_DATABASE_URL, max: 2 });
-    await owner.query(
-      `INSERT INTO users (id, email) VALUES ($1, 'dev@vip.local') ON CONFLICT (id) DO NOTHING`,
-      [DEV_USER],
-    );
     const moduleRef = await Test.createTestingModule({ imports: [AppModule] }).compile();
     app = moduleRef.createNestApplication();
     app.enableShutdownHooks();
     await app.init();
-    http = request(app.getHttpServer());
+    // Every suite signs up its own user; the agent keeps the auth cookies (ADR-017).
+    http = request.agent(app.getHttpServer());
+    const signup = await http
+      .post('/v1/auth/register')
+      .send({ email: `videos-${uuidv7()}@test.local`, password: 'correct horse battery staple' })
+      .expect(201);
+    const cookies = ([] as string[]).concat(signup.headers['set-cookie'] ?? []);
+    accessCookie = cookies.find((c) => c.startsWith('vip_at='))!.split(';')[0]!;
     reconciler = app.get(ReconcilerService);
     queue = app.get(QueueProducer);
     testQueue = new Queue('vip-media', {
@@ -250,6 +253,7 @@ describe('Videos, uploads and processing (integration)', () => {
     const controller = new AbortController();
     const res = await fetch(`http://127.0.0.1:${port}/v1/videos/${videoId}/events`, {
       signal: controller.signal,
+      headers: { cookie: accessCookie },
     });
     expect(res.headers.get('content-type')).toContain('text/event-stream');
 
@@ -342,6 +346,19 @@ describe('Videos, uploads and processing (integration)', () => {
     expect(page2.body.segments.map((s: { idx: number }) => s.idx)).toEqual([3]);
 
     await http.get(`/v1/videos/${videoId}/transcript?fromMs=5000&toMs=1000`).expect(400);
+
+    // Captions for the player's <track>, and transcript search (every word, prefix match).
+    const vtt = await http.get(`/v1/videos/${videoId}/captions`).expect(200);
+    expect(vtt.headers['content-type']).toContain('text/vtt');
+    expect(vtt.text).toContain('WEBVTT\n\nS0\n00:00:00.000 --> 00:00:05.000\nsegment 0 text');
+    const found = await http.get(`/v1/videos/${videoId}/search?q=segm 2`).expect(200);
+    expect(found.body.segments.map((x: { idx: number }) => x.idx)).toEqual([2]);
+    await http.get(`/v1/videos/${videoId}/search?q=`).expect(400);
+
+    // Playback: a presigned URL for the original (no proxy was made for this video).
+    const play = await http.get(`/v1/videos/${videoId}/playback`).expect(200);
+    expect(play.body).toMatchObject({ source: 'original', contentType: 'video/mp4' });
+    expect(play.body.url).toContain('X-Amz-Signature=');
 
     // Another user's video is invisible here too.
     const stranger = uuidv7();

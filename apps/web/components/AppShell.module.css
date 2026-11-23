@@ -1,0 +1,59 @@
+.shell {
+  min-height: 100vh;
+  display: grid;
+  grid-template-rows: auto 1fr;
+}
+.bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 10px 24px;
+  background: var(--ink);
+  color: var(--paper);
+}
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 17px;
+  text-decoration: none;
+}
+.badge {
+  display: inline-grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  background: var(--amber);
+  color: var(--ink);
+  border-radius: 3px;
+  font-size: 12px;
+}
+.account {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.account :global(.btn-quiet) {
+  color: var(--paper);
+  border-color: rgb(238 241 244 / 30%);
+}
+.who {
+  font-size: 14px;
+  opacity: 0.8;
+}
+.main {
+  width: min(1320px, 100%);
+  margin: 0 auto;
+  padding: 24px;
+}
+@media (max-width: 600px) {
+  .who {
+    display: none;
+  }
+  .main {
+    padding: 16px;
+  }
+}

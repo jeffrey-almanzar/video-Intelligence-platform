@@ -6,6 +6,8 @@ OpenAI-compatible server, a replay of recorded responses in tests) can stand in 
 """
 
 import asyncio
+import json
+from collections.abc import AsyncIterator
 from dataclasses import dataclass
 from typing import Any, Protocol
 
@@ -28,8 +30,30 @@ class ChatResponse:
     done_reason: str | None
 
 
+@dataclass(frozen=True, slots=True)
+class StreamChunk:
+    """A piece of a streamed answer. The last chunk has `done=True` and the token counts."""
+
+    text: str
+    done: bool = False
+    input_tokens: int | None = None
+    output_tokens: int | None = None
+    #: The model is reasoning (think=True); its reasoning text is not passed on.
+    thinking: bool = False
+
+
 class Backend(Protocol):
     name: str
+
+    def chat_stream(
+        self,
+        *,
+        model: str,
+        messages: list[dict[str, str]],
+        options: dict[str, Any],
+        think: bool,
+        keep_alive: str | int,
+    ) -> AsyncIterator[StreamChunk]: ...
 
     async def chat(
         self,
@@ -117,6 +141,52 @@ class OllamaBackend:
             output_tokens=data.get("eval_count"),
             done_reason=data.get("done_reason"),
         )
+
+    async def chat_stream(
+        self,
+        *,
+        model: str,
+        messages: list[dict[str, str]],
+        options: dict[str, Any],
+        think: bool,
+        keep_alive: str | int,
+    ) -> AsyncIterator[StreamChunk]:
+        """Free-text streaming (Q&A). Connection failures before the first token are retried;
+        a stream that breaks midway surfaces as LLMUnavailable (the caller can't un-send text)."""
+        body = {"model": model, "messages": messages, "options": options, "think": think,
+                "keep_alive": keep_alive, "stream": True}  # fmt: skip
+        last: Exception | None = None
+        for delay in (0.0, *_RETRY_DELAYS_S):
+            if delay:
+                await asyncio.sleep(delay)
+            try:
+                async with self._http.stream("POST", "/api/chat", json=body) as resp:
+                    if resp.status_code >= 400:
+                        raise httpx.HTTPStatusError(
+                            f"{resp.status_code}", request=resp.request, response=resp
+                        )
+                    async for line in resp.aiter_lines():
+                        if not line:
+                            continue
+                        data = json.loads(line)
+                        if data.get("done"):
+                            yield StreamChunk(
+                                "", True, data.get("prompt_eval_count"), data.get("eval_count")
+                            )
+                            return
+                        message = data.get("message", {})
+                        if message.get("thinking"):
+                            yield StreamChunk("", thinking=True)
+                        text = message.get("content", "")
+                        if text:
+                            yield StreamChunk(text)
+                    return
+            except httpx.ConnectError as exc:
+                last = exc
+                log.warning("llm.stream_connect_retry", error=str(exc)[:200])
+            except (httpx.TransportError, httpx.HTTPStatusError) as exc:
+                raise LLMUnavailable(f"Ollama stream failed: {exc}") from exc
+        raise LLMUnavailable(f"Ollama unreachable: {last}")
 
     async def embed(
         self, *, model: str, texts: list[str], keep_alive: str | int

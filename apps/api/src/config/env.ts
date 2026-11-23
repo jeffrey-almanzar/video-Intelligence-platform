@@ -46,8 +46,16 @@ export const envSchema = z.object({
     .default(10 * 1024 ** 3),
   UPLOAD_SESSION_TTL_HOURS: z.coerce.number().int().positive().default(24),
 
-  /** Until real auth (Phase 5): the seeded user every request acts as. Never used in production. */
-  DEV_USER_ID: z.uuid().default('00000000-0000-7000-8000-000000000001'),
+  /** HMAC key for access-token JWTs (ADR-017). At least 32 characters; rotate by redeploying. */
+  JWT_SECRET: z.string().min(32, 'JWT_SECRET must be at least 32 characters'),
+  ACCESS_TOKEN_TTL_SECONDS: z.coerce.number().int().min(60).max(3600).default(900),
+  REFRESH_TOKEN_TTL_DAYS: z.coerce.number().int().min(1).max(90).default(30),
+  /** Secure cookies need HTTPS; defaults to on in production only. */
+  COOKIE_SECURE: booleanString.optional(),
+  /** Requests per minute per client IP on register/login/refresh. */
+  AUTH_RATE_LIMIT_PER_MINUTE: z.coerce.number().int().min(1).default(10),
+  /** Express `trust proxy`: which hops may set X-Forwarded-For (the web app's rewrites, a load balancer). */
+  TRUST_PROXY: z.string().default('loopback, linklocal, uniquelocal'),
 
   /** BullMQ key prefix. Tests use their own so a running local worker never consumes test jobs. */
   QUEUE_PREFIX: z
@@ -65,6 +73,10 @@ export const envSchema = z.object({
 });
 
 export type Env = z.infer<typeof envSchema>;
+
+/** Cookies are Secure unless explicitly disabled, and always in production. */
+export const cookieSecure = (env: Env): boolean =>
+  env.NODE_ENV === 'production' || (env.COOKIE_SECURE ?? false);
 
 export class InvalidEnvironmentError extends Error {
   constructor(readonly issues: string[]) {

@@ -17,24 +17,17 @@ from vip_ai.analysis.graph import Deps, analyze
 from vip_ai.analysis.types import AnalysisInput, Evidence, Report, Seg
 from vip_ai.config import Settings
 from vip_ai.infra.ids import uuid7
-from vip_ai.llm.backend import Backend, LLMUnavailable, OllamaBackend
+from vip_ai.llm.backend import LLMUnavailable
 from vip_ai.llm.cache import S3Cache
 from vip_ai.llm.client import LLM, CallRecord
 from vip_ai.llm.embeddings import Embedder
-from vip_ai.llm.replay import MissingRecording, ReplayBackend
+from vip_ai.llm.factory import build_backend
+from vip_ai.llm.replay import MissingRecording
 from vip_ai.pipeline.context import StageContext, StageOutcome
 from vip_ai.pipeline.errors import INTERNAL_ERROR, PipelineError
 
 LLM_UNAVAILABLE = "LLM_UNAVAILABLE"
 TRANSCRIPT_MISSING = "TRANSCRIPT_MISSING"
-
-
-def build_backend(settings: Settings) -> Backend:
-    if settings.llm_backend == "replay" and settings.llm_replay_fixture is not None:
-        return ReplayBackend(
-            settings.llm_replay_fixture
-        )  # Settings rejects replay without a fixture
-    return OllamaBackend(settings.ollama_base_url)
 
 
 def analysis_config(settings: Settings) -> AnalysisConfig:

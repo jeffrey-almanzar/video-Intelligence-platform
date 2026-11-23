@@ -68,7 +68,9 @@ try {
       },
     }),
   );
-  console.log('Lifecycle: abort incomplete multipart uploads and expire test LLM caches after 1 day');
+  console.log(
+    'Lifecycle: abort incomplete multipart uploads and expire test LLM caches after 1 day',
+  );
 } catch (error) {
   // Not every S3-compatible store implements lifecycle rules; the API's reconciler still aborts
   // expired upload sessions it knows about.

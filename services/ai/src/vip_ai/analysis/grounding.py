@@ -29,6 +29,7 @@ _STOP = frozenset(
     i'm don't it is be to of in on at as by or an a so if do does did been being were me my
     los las una uno unos unas por para con sin sobre entre que del al lo le les se su sus como
     pero más muy este esta estos estas ese esa eso esto hay ser son está están fue era tiene
+    qué cuál cuáles cómo dónde cuándo quién quiénes cuánto
     """.split()  # noqa: SIM905  (readable word list)
 )
 

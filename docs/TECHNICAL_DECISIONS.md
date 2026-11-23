@@ -22,7 +22,7 @@ Architecture approved on 2026-11-21 with the recommended defaults: ADR-003 and A
 | 014 | Hybrid retrieval (pgvector + Postgres FTS) instead of a vector DB      | Accepted                           |
 | 015 | Segment-ID citations instead of LLM-generated timestamps               | Accepted                           |
 | 016 | JSON Schema contracts for cross-language messages                      | Accepted (introduced in Phase 2)   |
-| 017 | Auth implemented in NestJS (JWT + rotating refresh tokens)             | Accepted (deferred to Phase 5)     |
+| 017 | Auth implemented in NestJS (JWT + rotating refresh tokens)             | **Accepted: built in Phase 5**     |
 | 018 | SSE for progress and streaming answers (not WebSockets)                | Accepted                           |
 | 019 | Python 3.12 via uv, not system Python 3.15                             | Accepted                           |
 | 020 | SeaweedFS as the local S3-compatible store (MinIO images discontinued) | Accepted (Phase 1)                 |
@@ -30,6 +30,7 @@ Architecture approved on 2026-11-21 with the recommended defaults: ADR-003 and A
 | 022 | Phase 2 implementation decisions                                       | Accepted (Phase 2)                 |
 | 023 | Transcription design                                                   | Accepted (Phase 3)                 |
 | 024 | Analysis design (intelligence reports)                                 | Accepted (Phase 4)                 |
+| 025 | Frontend, auth and baseline Q&A (Phase 5)                              | Accepted (Phase 5)                 |
 
 ---
 
@@ -359,3 +360,22 @@ Decisions made while building ingestion. Each one came from a measured problem o
 **Measured (BENCHMARKS.md, Phase 4).** On the four-talk golden set: 100% citation validity, 0% schema failures, 63% key-point coverage, 76% of items fully supported (94% at least partly) by their citations according to a local judge, chapter F1 0.40 at ±30 s. A 68-minute talk takes about 9.5 minutes to analyze. The Qwen3 8B map step and a single full-context call both covered fewer key points than 4B map-reduce on a 19-minute talk (27% and 36% vs 73%; one talk, indicative only), so ADR-008 and ADR-010's defaults stay.
 
 **Known limitations.** Reference labels were written by Claude from the transcripts, not by humans, and the same set was used to tune chapter settings. The judge is from the generator's model family. Topic weights are small (share of speech time in the segments that key phrases cite), so they rank topics but don't measure them. Reports are written in the transcript's language; only English talks were evaluated.
+
+---
+
+## ADR-025: Frontend, auth and baseline Q&A (Phase 5)
+
+**Context.** Phase 5 puts a browser UI on the platform and replaces the Phase 2 dev-user seam with real accounts. A non-technical user must be able to upload, watch processing, explore the report, jump to timestamps and ask grounded questions, and the happy path must pass in CI without models.
+
+**Decisions.**
+
+1. **Same-origin API through Next.js rewrites.** The browser calls `/api/*` on the web origin; Next forwards to NestJS. Auth cookies are first-party, app calls need no CORS, and SSE passes through (the bundled Next 16 docs recommend rewrites over route handlers for streaming). Uploads still go directly from the browser to storage with presigned URLs (ADR-013), so the bucket CORS lists the web origins. Authorization stays entirely in NestJS; Next's `proxy.ts` (formerly middleware) only redirects visitors without any session cookie to sign-in.
+2. **Auth per ADR-017.** Argon2id (OWASP baseline parameters, `@node-rs/argon2` prebuilt binaries), a 15-minute HS256 access JWT and a rotating opaque refresh token (only its SHA-256 stored), both `httpOnly; SameSite=Lax` cookies (`Secure` in production). A replaced refresh token presented again revokes its whole family, except within a 10-second grace window so two tabs refreshing at once don't sign the user out. An Origin check refuses cross-origin state-changing requests. Register/login/refresh are rate-limited per client IP (in-memory counters; Redis-backed storage is a Phase 7 item for multiple instances), with `trust proxy` so the limit applies to the client, not the web server. The dev-user bypass is gone; the seeded dev account gets a local password from `DEV_USER_PASSWORD` so earlier videos stay reachable (never in production).
+3. **Baseline Q&A (the benchmark Phase 6 must beat).** Python retrieves with Postgres full-text search over the published transcript (content words OR-ed with prefix matching, because the `simple` config keeps stopwords and AND-ing a whole question rarely matches), adds neighbouring segments and always includes the report's summary and chapter titles. Qwen3 4B streams an answer citing `[S12]`; code keeps only citations to segments it provided (accepting the `[S12 | 03:04]` and `[S12, S14]` forms models produce), detects `[inferred]` and the "not covered" refusal, and flags answers without citations. NestJS owns conversations and messages, calls the internal endpoint with the service token, relays NDJSON as SSE (`user`, `status`, `delta`, `done`, `error`) and stores the cleaned answer with its citations.
+4. **Qwen3 runs with thinking on for Q&A.** With Ollama 0.40.17, `think: false` did not stop Qwen3 4B from narrating its reasoning as the answer ("Okay, I need to figure out…"), and the `/no_think` soft switch was treated as part of the question. With `think: true` the reasoning arrives in a separate field, which is dropped, and the content is a clean answer (6.5 s vs 6.8 s on the same question). The analysis stage was never affected because its JSON-schema output leaves no room for prose.
+5. **Keep-alives through every proxy.** While the model reasons nothing is streamed, and the Next rewrite proxy closed a silent stream (one long-reasoning question failed). The Python service now re-sends the `thinking` status at most every 5 s, which also covers load balancers' idle timeouts.
+6. **UI without a component framework.** Next.js App Router with client components for the interactive workspace, CSS Modules on a small token set, native elements for accessibility (`<dialog>`, `<progress>`, WAI-ARIA tabs with arrow keys, `<track kind="captions">` from a WebVTT endpoint), visible focus, `prefers-reduced-motion`. The signature element is the **Index Strip**: one time axis with chapters, highlight ticks, the selected evidence and the playhead.
+7. **Resumable browser uploads.** Parts upload four at a time, each signed just before use (no expired URLs on slow links) and retried with backoff; ETags are checkpointed in `localStorage`, so selecting the same file again resumes with the missing parts while the server session is open.
+8. **Stubbed AI backend for E2E.** The Playwright test runs the real stack on its own ports and queue prefix. Only the models are replaced: `TRANSCRIPTION_PROVIDER=fixture` writes a recorded transcript, and `LLM_BACKEND=replay` serves recorded Ollama responses (analysis and Q&A). `make e2e-record` re-records against real Ollama; both switches are refused in production.
+
+**Alternatives considered.** Calling NestJS cross-origin from the browser (CORS with credentials; cookies scoped to the API host): workable, but every call needs CORS and SSR would forward cookies by hand. Auth.js in Next (rejected in ADR-017: authorization split across two apps). Tailwind or a component library: faster to start, but this phase's UI is small enough that native elements plus tokens keep accessibility under direct control with no new dependency.

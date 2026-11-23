@@ -3,8 +3,11 @@
  * create video -> sign parts in batches -> PUT parts straight to storage in parallel with retries
  * -> complete -> follow progress over SSE until the video is ready or failed.
  *
- * Usage: node scripts/upload.ts <file> [--api http://localhost:3000] [--no-follow]
+ * Usage: node scripts/upload.ts <file> [--title TITLE] [--api http://localhost:3000] [--no-follow]
+ * Signs in with VIP_EMAIL / VIP_PASSWORD, falling back to DEV_USER_EMAIL (dev@vip.local) and
+ * DEV_USER_PASSWORD from the repo's .env (ADR-017).
  */
+import { existsSync } from 'node:fs';
 import { open, stat } from 'node:fs/promises';
 import path from 'node:path';
 
@@ -31,10 +34,38 @@ const CONTENT_TYPES: Record<string, string> = {
   '.webm': 'video/webm',
 };
 
+const envFile = path.resolve(import.meta.dirname, '../../../.env');
+if (existsSync(envFile)) process.loadEnvFile(envFile);
+const email = process.env.VIP_EMAIL ?? process.env.DEV_USER_EMAIL ?? 'dev@vip.local';
+const password = process.env.VIP_PASSWORD ?? process.env.DEV_USER_PASSWORD;
+if (!password) {
+  console.error('set VIP_EMAIL / VIP_PASSWORD (or DEV_USER_PASSWORD in .env, then `make migrate`)');
+  process.exit(2);
+}
+
+/** Signs in and returns the access token (15 min: enough for one upload; SSE stays connected). */
+async function signIn(): Promise<string> {
+  const res = await fetch(`${api}/v1/auth/login`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ email, password }),
+  });
+  if (!res.ok) throw new Error(`sign-in as ${email} failed: ${res.status} ${await res.text()}`);
+  const token = res.headers
+    .getSetCookie()
+    .find((c) => c.startsWith('vip_at='))
+    ?.split(';')[0]
+    ?.slice('vip_at='.length);
+  if (!token) throw new Error('sign-in returned no access token');
+  return token;
+}
+const accessToken = await signIn();
+const auth = { authorization: `Bearer ${accessToken}` };
+
 async function call<T>(method: string, route: string, body?: unknown): Promise<T> {
   const res = await fetch(`${api}${route}`, {
     method,
-    headers: body ? { 'content-type': 'application/json' } : {},
+    headers: body ? { 'content-type': 'application/json', ...auth } : auth,
     body: body ? JSON.stringify(body) : undefined,
   });
   const text = await res.text();
@@ -127,7 +158,7 @@ if (!follow) process.exit(0);
 
 // Follow SSE progress until the job finishes.
 const res = await fetch(`${api}/v1/videos/${videoId}/events`, {
-  headers: { accept: 'text/event-stream' },
+  headers: { accept: 'text/event-stream', ...auth },
 });
 const decoder = new TextDecoder();
 let buffer = '';

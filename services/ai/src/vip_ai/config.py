@@ -77,7 +77,9 @@ class Settings(BaseSettings):
 
     # --- transcription (ADR-004, ADR-010)
     #: auto = MLX on Apple Silicon, faster-whisper elsewhere.
-    transcription_provider: Literal["auto", "mlx", "faster-whisper"] = "auto"
+    #: fixture = no model: use TRANSCRIPTION_FIXTURE's segments (end-to-end tests, demos).
+    transcription_provider: Literal["auto", "mlx", "faster-whisper", "fixture"] = "auto"
+    transcription_fixture: Path | None = None
     #: Model id for the chosen provider; None = provider default (large-v3-turbo).
     whisper_model: str | None = None
     #: Force a language (ISO 639-1) instead of auto-detecting it.
@@ -88,6 +90,8 @@ class Settings(BaseSettings):
     #: replay = serve recorded responses from LLM_REPLAY_FIXTURE (tests, CI, stubbed demos).
     llm_backend: Literal["ollama", "replay"] = "ollama"
     llm_replay_fixture: Path | None = None
+    #: With LLM_BACKEND=replay: call Ollama for requests missing from the fixture and add them.
+    llm_record: bool = False
     llm_keep_alive: str = "10m"
     #: S3 prefix of the content-addressed LLM output cache (tests use a unique one).
     llm_cache_prefix: str = "llm-cache"
@@ -97,10 +101,21 @@ class Settings(BaseSettings):
     analysis_num_ctx: int = Field(8192, ge=2048, le=65536)
     analysis_chunk_tokens: int = Field(2000, ge=500, le=30000)
 
+    # --- baseline Q&A (Phase 5)
+    #: 4B by default: interactive latency matters more here than in the batch analysis.
+    qa_model: str = "qwen3:4b"
+    qa_num_ctx: int = Field(8192, ge=2048, le=65536)
+
     otel_exporter_otlp_endpoint: str | None = None
 
     @model_validator(mode="after")
     def _no_replay_in_production(self) -> "Settings":
+        if self.transcription_provider == "fixture" and (
+            self.environment == "production" or self.transcription_fixture is None
+        ):
+            raise ValueError(
+                "TRANSCRIPTION_PROVIDER=fixture needs TRANSCRIPTION_FIXTURE, outside production"
+            )
         if self.llm_backend == "replay" and self.environment == "production":
             raise ValueError("LLM_BACKEND=replay is for tests and demos, not production")
         if self.llm_backend == "replay" and self.llm_replay_fixture is None:

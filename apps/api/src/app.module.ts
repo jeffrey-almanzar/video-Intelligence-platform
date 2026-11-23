@@ -1,8 +1,11 @@
-import { Module } from '@nestjs/common';
+import { type MiddlewareConsumer, Module, type NestModule } from '@nestjs/common';
+import cookieParser from 'cookie-parser';
 import { StandardSchemaValidationPipe } from '@nestjs/common';
 import { APP_FILTER, APP_GUARD, APP_PIPE } from '@nestjs/core';
 import { ScheduleModule } from '@nestjs/schedule';
-import { DevAuthGuard } from './auth/auth.js';
+import { JwtAuthGuard, OriginGuard } from './auth/auth.js';
+import { AssistantModule } from './assistant/assistant.module.js';
+import { AuthModule } from './auth/auth.module.js';
 import { LoggerModule } from 'nestjs-pino';
 import { ProblemDetailsFilter } from './common/problem-details.filter.js';
 import { ConfigModule, ENV } from './config/config.module.js';
@@ -36,16 +39,25 @@ import { VideosModule } from './videos/videos.module.js';
     InfraModule,
     ScheduleModule.forRoot(),
     HealthModule,
+    AuthModule,
     ProcessingModule,
     VideosModule,
     EventsModule,
     IntelligenceModule,
+    AssistantModule,
   ],
   providers: [
     { provide: APP_FILTER, useClass: ProblemDetailsFilter },
     // Validates every @Body/@Query/@Param that declares a `schema` (Zod, via Standard Schema).
     { provide: APP_PIPE, useValue: new StandardSchemaValidationPipe() },
-    { provide: APP_GUARD, useClass: DevAuthGuard },
+    // Order matters: refuse cross-origin writes before doing any token work.
+    { provide: APP_GUARD, useClass: OriginGuard },
+    { provide: APP_GUARD, useClass: JwtAuthGuard },
   ],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  // Registered here (not in main.ts) so tests that build the app from this module get it too.
+  configure(consumer: MiddlewareConsumer): void {
+    consumer.apply(cookieParser()).forRoutes('*');
+  }
+}

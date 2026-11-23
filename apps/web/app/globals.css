@@ -1,0 +1,190 @@
+/*
+ * Design tokens. The product's world is the editing suite: a time axis, timecode, a playhead.
+ * Ink on cool paper, timecode amber used only as a fill (never as text on light), and grounding
+ * encoded by edge style: solid = stated by the speaker, dashed = AI interpretation.
+ */
+:root {
+  --paper: #eef1f4;
+  --surface: #ffffff;
+  --ink: #14202e;
+  --slate: #5b6b7c;
+  --rule: #d5dce3;
+  --amber: #f2a900;
+  --amber-soft: #fff1c7;
+  --danger: #b3261e;
+  --danger-soft: #fde8e6;
+  --ok: #1f6f4a;
+
+  /* Highlight kinds on the Index Strip (distinguishable without colour via glyphs too). */
+  --k-explanation: #3a6ea5;
+  --k-insight: #7a4fa3;
+  --k-recommendation: #1f6f4a;
+  --k-demonstration: #b5651d;
+  --k-qa: #a33a5b;
+
+  --radius: 6px;
+  --shadow: 0 1px 2px rgb(20 32 46 / 6%), 0 6px 18px rgb(20 32 46 / 6%);
+  --focus: 0 0 0 3px var(--paper), 0 0 0 5px var(--ink);
+
+  --font-display: var(--font-bricolage), ui-sans-serif, system-ui;
+  --font-body: var(--font-plex-sans), ui-sans-serif, system-ui;
+  --font-mono: var(--font-plex-mono), ui-monospace, monospace;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  color-scheme: light;
+}
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-display);
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+  margin: 0;
+}
+
+a {
+  color: inherit;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+  color: inherit;
+}
+
+:focus-visible {
+  outline: none;
+  box-shadow: var(--focus);
+  border-radius: 3px;
+}
+
+.tc {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+
+.visually-hidden {
+  position: absolute !important;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.skip-link {
+  position: absolute;
+  left: 12px;
+  top: -48px;
+  padding: 8px 12px;
+  background: var(--ink);
+  color: var(--paper);
+  border-radius: var(--radius);
+  z-index: 10;
+}
+.skip-link:focus {
+  top: 12px;
+}
+
+/* Shared controls */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border-radius: var(--radius);
+  border: 1px solid var(--ink);
+  background: var(--ink);
+  color: var(--paper);
+  font-weight: 500;
+  cursor: pointer;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.btn-quiet {
+  background: transparent;
+  color: var(--ink);
+  border-color: var(--rule);
+}
+.btn-quiet:hover:not(:disabled) {
+  border-color: var(--ink);
+}
+.btn-danger {
+  background: var(--danger);
+  border-color: var(--danger);
+}
+
+.field {
+  display: grid;
+  gap: 4px;
+}
+.field input,
+.field textarea {
+  padding: 9px 11px;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+.field input:focus-visible,
+.field textarea:focus-visible {
+  border-color: var(--ink);
+}
+
+.alert {
+  padding: 10px 12px;
+  border-radius: var(--radius);
+  background: var(--danger-soft);
+  color: var(--danger);
+  border-left: 3px solid var(--danger);
+}
+
+.skeleton {
+  background: linear-gradient(90deg, var(--rule) 0%, #e4e9ee 50%, var(--rule) 100%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s ease-in-out infinite;
+  border-radius: 4px;
+}
+@keyframes shimmer {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -200% 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
