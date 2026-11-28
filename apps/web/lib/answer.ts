@@ -58,3 +58,23 @@ export function parseAnswer(text: string): Block[] {
   flush();
   return blocks;
 }
+
+export type GroundingLabel = 'stated' | 'interpretation' | 'not-covered' | 'unsupported';
+
+/** One label per answer, so "said in the video" vs "AI interpretation" is always visible. */
+export function groundingLabel(
+  g: {
+    incomplete?: boolean;
+    notCovered?: boolean;
+    unsupported?: boolean;
+    inferred?: boolean;
+    claims?: number;
+    supportedClaims?: number;
+  } | null,
+): GroundingLabel | null {
+  if (!g || g.incomplete) return null; // no answer to label
+  if (g.notCovered) return 'not-covered';
+  if (g.unsupported) return 'unsupported';
+  const unverified = g.claims !== undefined && (g.supportedClaims ?? 0) < g.claims;
+  return g.inferred || unverified ? 'interpretation' : 'stated';
+}

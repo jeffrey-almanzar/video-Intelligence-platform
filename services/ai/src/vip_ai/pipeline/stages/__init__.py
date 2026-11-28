@@ -3,8 +3,10 @@ packages/contracts/pipeline.json (checked by tests/test_pipeline_registry.py).""
 
 from vip_ai.pipeline.runner import StageFn
 from vip_ai.pipeline.stages import (
+    analyze_frames,
     analyze_transcript,
     detect_scenes,
+    embed,
     extract_media,
     finalize,
     probe,
@@ -16,6 +18,8 @@ STAGES: dict[str, StageFn] = {
     "extract_media": extract_media.run,
     "detect_scenes": detect_scenes.run,
     "transcribe": transcribe.run,
+    "analyze_frames": analyze_frames.run,
     "analyze_transcript": analyze_transcript.run,
+    "embed": embed.run,
     "finalize": finalize.run,
 }

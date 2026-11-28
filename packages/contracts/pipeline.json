@@ -1,12 +1,14 @@
 {
   "$comment": "Single source of truth for pipeline stage order and queue routing (ADR-006, ADR-016). Run `pnpm --filter @vip/contracts generate` after editing. Queues are resource classes: vip-media (CPU/IO, FFmpeg) and vip-gpu (ML models; concurrency 1 locally so models load sequentially, ADR-010).",
-  "version": "2026.11.4",
+  "version": "2026.11.5",
   "stages": [
     { "name": "probe", "queue": "vip-media", "attempts": 3, "backoffMs": 2000 },
     { "name": "extract_media", "queue": "vip-media", "attempts": 3, "backoffMs": 5000 },
     { "name": "detect_scenes", "queue": "vip-media", "attempts": 3, "backoffMs": 5000 },
     { "name": "transcribe", "queue": "vip-gpu", "attempts": 3, "backoffMs": 15000 },
+    { "name": "analyze_frames", "queue": "vip-gpu", "attempts": 3, "backoffMs": 30000 },
     { "name": "analyze_transcript", "queue": "vip-gpu", "attempts": 3, "backoffMs": 30000 },
+    { "name": "embed", "queue": "vip-gpu", "attempts": 3, "backoffMs": 15000 },
     { "name": "finalize", "queue": "vip-media", "attempts": 5, "backoffMs": 2000 }
   ]
 }

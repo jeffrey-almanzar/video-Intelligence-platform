@@ -18,9 +18,10 @@ The project is also a deliberate engineering exercise. It is meant to show **str
 | 3     | Transcription (VAD, windowed MLX Whisper, WER baselines)                    | ✅ Done                |
 | 4     | AI intelligence (map-reduce analysis graph, cited reports, eval harness)    | ✅ Done                |
 | 5     | Frontend (auth, upload, live processing, report dashboard, baseline Ask AI) | ✅ Done                |
-| 6–7   | Advanced AI → Production                                                    | ⏳ Not started         |
+| 6     | Advanced AI (hybrid RAG, grounded Q&A graph, selective vision, QA evals)    | ✅ Done                |
+| 7     | Production readiness                                                        | ⏳ Not started         |
 
-Phase 1 delivered the running skeleton: infrastructure, API and AI service health checks, CI, and two spikes that validated the cross-language queue and local inference ([docs/BENCHMARKS.md](docs/BENCHMARKS.md)). Phases 2–5 built the product end to end: sign up at http://localhost:4000 (`make web`), drop in a video, watch it process live, then explore its report on a single time axis (summary, takeaways, chapters, highlights, topics and a searchable transcript, every item linked to the moment it comes from) and ask questions whose answers cite playable timestamps. Scripts can use the same API (`make upload FILE=...`). See [docs/ROADMAP.md](docs/ROADMAP.md).
+Phase 1 delivered the running skeleton: infrastructure, API and AI service health checks, CI, and two spikes that validated the cross-language queue and local inference ([docs/BENCHMARKS.md](docs/BENCHMARKS.md)). Phases 2–5 built the product end to end: sign up at http://localhost:4000 (`make web`), drop in a video, watch it process live, then explore its report on a single time axis (summary, takeaways, chapters, highlights, topics and a searchable transcript, every item linked to the moment it comes from) and ask questions whose answers cite playable timestamps. Phase 6 made those answers better and more honest: hybrid retrieval (meaning plus keywords) over transcript chunks and on-screen text read by a vision model, a verify step, and a label on each answer saying whether it is stated in the video or includes interpretation (82% correct on the golden QA set vs 64% before). Scripts can use the same API (`make upload FILE=...`). See [docs/ROADMAP.md](docs/ROADMAP.md).
 
 ---
 

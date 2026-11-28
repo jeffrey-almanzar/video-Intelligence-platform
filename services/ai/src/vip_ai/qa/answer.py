@@ -29,6 +29,11 @@ class Turn:
     content: str
 
 
+#: Shown when the model spends its whole output budget reasoning and writes no answer. Better an
+#: honest "couldn't finish" than an empty bubble; the done event also flags `incomplete`.
+INCOMPLETE_ANSWER = "I couldn't finish an answer to that. Try asking it more specifically."
+
+
 def build_messages(ctx: Context, question: str, history: list[Turn]) -> list[dict[str, str]]:
     parts = [f'Video: "{ctx.title}"' if ctx.title else "Video: untitled"]
     if ctx.summary:
@@ -61,6 +66,10 @@ async def stream_answer(
     "text"}` events, then one `{"type": "done", ...}` with the cleaned content, validated
     citations and grounding flags."""
     started = time.monotonic()
+    # Internal: what retrieval found, best first (NestJS ignores it; the QA evaluation scores it).
+    yield {"type": "retrieval",
+           "items": [{"idx": x.idx, "startMs": x.start_ms, "endMs": x.end_ms} for x in ctx.ranked],
+           "context": [{"idx": x.idx, "startMs": x.start_ms, "endMs": x.end_ms} for x in ctx.segments]}  # fmt: skip
     text: list[str] = []
     tokens_in = tokens_out = None
     last_status = -STATUS_EVERY_S
@@ -82,6 +91,10 @@ async def stream_answer(
             yield {"type": "delta", "text": chunk.text}
         if chunk.done:
             tokens_in, tokens_out = chunk.input_tokens, chunk.output_tokens
+    incomplete = not "".join(text).strip()
+    if incomplete:
+        text = [INCOMPLETE_ANSWER]
+        yield {"type": "delta", "text": INCOMPLETE_ANSWER}
     parsed = parse_answer("".join(text), ctx.ids)
     by_idx = {s.idx: s for s in ctx.segments}
     yield {
@@ -97,6 +110,7 @@ async def stream_answer(
             "inferred": parsed.inferred,
             "notCovered": parsed.not_covered,
             "unsupported": not parsed.not_covered and not parsed.cited,
+            "incomplete": incomplete,
             "retrievalHits": ctx.hits,
         },
         "model": model,

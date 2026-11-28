@@ -92,9 +92,21 @@ async def load_input(ctx: StageContext) -> AnalysisInput:
             "SELECT start_ms FROM scenes WHERE job_id = %s AND idx > 0 ORDER BY idx", (ctx.job_id,)
         )
         cuts = [r[0] for r in await cur.fetchall()]
+        cur = await conn.execute(
+            "SELECT timestamp_ms, description, ocr_text FROM frame_analyses WHERE job_id = %s ORDER BY timestamp_ms",
+            (ctx.job_id,),
+        )
+        frames = [
+            (ts, d + (f" Text on screen: {o}" if o else "")) for ts, d, o in await cur.fetchall()
+        ]
     duration = duration_ms or (segments[-1].end_ms if segments else 0)
     return AnalysisInput(
-        duration_ms=duration, language=language, segments=segments, scene_cuts_ms=cuts, title=title
+        duration_ms=duration,
+        language=language,
+        segments=segments,
+        scene_cuts_ms=cuts,
+        title=title,
+        frames=frames,
     )
 
 

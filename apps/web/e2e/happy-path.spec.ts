@@ -75,9 +75,8 @@ test('a new user uploads a talk, explores the report and asks a grounded questio
   await expect(page.getByText(/\d+ matching passages?/)).toBeVisible();
   await expect(page.locator('mark').first()).toHaveText(/blender/i);
 
-  // Ask a specific question; the answer streams in and cites moments that can be played.
-  // (Broad questions like "what is this about?" often get no citation from the keyword-search
-  // baseline; the UI flags those, and Phase 6's retrieval targets them.)
+  // Ask a specific question; the answer streams in, cites moments that can be played, and is
+  // labelled with how well its claims are grounded (Phase 6 verify step).
   await page.getByRole('tab', { name: 'Ask AI' }).click();
   const question = 'Why was Blender not invited to the metaverse events at SIGGRAPH?';
   await page.getByPlaceholder('Ask about this video').fill(question);
@@ -85,6 +84,9 @@ test('a new user uploads a talk, explores the report and asks a grounded questio
   const answer = page.locator('[aria-live="polite"]').filter({ hasText: question });
   const cite = answer.getByRole('button', { name: /^Play from/ }).first();
   await expect(cite).toBeVisible({ timeout: 90_000 });
+  await expect(
+    answer.getByText(/^(Stated in the video|Includes AI interpretation)\b/),
+  ).toBeVisible();
   await cite.click();
   await expect.poll(() => currentSeconds(page)).toBeGreaterThan(0);
   await expectAccessible(page);

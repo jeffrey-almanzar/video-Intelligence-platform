@@ -31,6 +31,7 @@ Architecture approved on 2026-11-21 with the recommended defaults: ADR-003 and A
 | 023 | Transcription design                                                   | Accepted (Phase 3)                 |
 | 024 | Analysis design (intelligence reports)                                 | Accepted (Phase 4)                 |
 | 025 | Frontend, auth and baseline Q&A (Phase 5)                              | Accepted (Phase 5)                 |
+| 026 | Hybrid retrieval, grounded Q&A graph and selective vision (Phase 6)    | **Accepted: golden QA measured**   |
 
 ---
 
@@ -379,3 +380,42 @@ Decisions made while building ingestion. Each one came from a measured problem o
 8. **Stubbed AI backend for E2E.** The Playwright test runs the real stack on its own ports and queue prefix. Only the models are replaced: `TRANSCRIPTION_PROVIDER=fixture` writes a recorded transcript, and `LLM_BACKEND=replay` serves recorded Ollama responses (analysis and Q&A). `make e2e-record` re-records against real Ollama; both switches are refused in production.
 
 **Alternatives considered.** Calling NestJS cross-origin from the browser (CORS with credentials; cookies scoped to the API host): workable, but every call needs CORS and SSR would forward cookies by hand. Auth.js in Next (rejected in ADR-017: authorization split across two apps). Tailwind or a component library: faster to start, but this phase's UI is small enough that native elements plus tokens keep accessibility under direct control with no new dependency.
+
+---
+
+## ADR-026: Hybrid retrieval, grounded Q&A graph and selective vision (Phase 6)
+
+**Context.** Phase 5's baseline answers from Postgres full-text matches on single segments. It misses paraphrases, can't see slides, and answers broad questions ("what is this about?") without citations. Phase 6 must measurably beat it on a golden QA set, with the numbers committed.
+
+**Decisions.**
+
+1. **Measure first.** The golden QA set (`evals/golden/qa.json`: 37 factual, 2 broad, 4 visual and 9 unanswerable questions over the four golden talks, each answerable one with the time window where it is said or shown) and the baseline run were written and measured before hybrid retrieval existed, so the new system wasn't tuned toward a known target.
+2. **Retrieval chunks are separate from analysis chunks.** About 300 tokens (1–2 minutes) of whole segments with one segment of overlap, embedded with Qwen3-Embedding 0.6B (documents raw, queries with Qwen3's retrieval instruction), stored in `transcript_chunks` with an HNSW cosine index and a generated `tsvector` (ADR-014). A new `embed` stage writes them; `finalize` refuses to publish a transcript with speech but no chunks.
+3. **Hybrid = dense + full-text, fused with Reciprocal Rank Fusion (k = 60).** Top 20 from each, top 6 chunks to the model (3 for broad questions), within a 2,800-token budget. Both signals run in Postgres, filtered to the video's published transcript.
+4. **Intent is deterministic.** Regexes route broad questions (summary, main points; English and Spanish) and visual ones (slide, screen, shown, picture…). Broad questions also get the report's takeaways, each tied to the segment it cites, so summaries come back cited. A model call for intent would add seconds to every question for little gain.
+5. **The Q&A flow is a LangGraph graph** (ADR-007): rewrite (follow-ups only, one small cached call) → retrieve → generate (streamed through LangGraph's custom stream, thinking on with keep-alives per ADR-025) → verify. Verification parses and validates citations in code, then checks each cited sentence against the segments it cites with embeddings (cosine ≥ 0.45); the counts go into the answer's grounding, and the UI labels each answer "Stated in the video", "Includes AI interpretation", "Not covered" or "No supporting moment".
+6. **Vision is selective.** `analyze_frames` scores every keyframe from `detect_scenes` with deterministic signals (pointing phrases nearby, edge density as a proxy for slides and code, silence), keeps the best 30 per hour at least 15 s apart, and asks Qwen3-VL 4B for `{visual_type, description, ocr_text}`. Descriptions are cached by content (a retry skips finished frames), and a frame the model can't describe is skipped, not fatal. The notes are merged into retrieval chunks ("[On screen at 12:20: …]"), into the analysis map prompt next to the transcript lines of the same moment, and into Q&A context tied to the nearest segment, so on-screen facts can be cited.
+7. **The baseline stays selectable** (`QA_STRATEGY=baseline|hybrid`); every strategy emits an internal `retrieval` event, so production and evaluation run exactly the same code.
+8. **The evaluation runs in two passes** (all answers with the 4B model, then all judging with the 8B judge): alternating models per question made Ollama reload a model for every call on 16 GB (35 s loads, two load time-outs).
+9. **Hybrid is the default** (`QA_STRATEGY=hybrid`) because it won the evaluation below. If the model spends its whole output budget reasoning and writes nothing, both strategies now say so ("I couldn't finish an answer…", `grounding.incomplete`) instead of returning an empty answer.
+
+**Results** (golden QA set, 52 questions, Qwen3 4B answering and Qwen3 8B judging, M1 Pro 16 GB; `evals/results/qa/2026-11-23-baseline.json` vs `2026-11-28-hybrid.json`):
+
+| Metric                                  | Baseline (FTS)         | Hybrid                 |
+| --------------------------------------- | ---------------------- | ---------------------- |
+| Retrieval Recall@1 / @5 (42 answerable) | 0.71 / 0.90            | 0.86 / 0.98            |
+| MRR@10                                  | 0.79                   | **0.91**               |
+| Answer correct rate (44 answerable)     | 0.64                   | **0.82**               |
+| … factual (38) / broad (2) / visual (4) | 0.66 / 1 of 2 / 2 of 4 | 0.87 / 2 of 2 / 1 of 4 |
+| Faithful (judge: fully supported)       | **0.70**               | 0.60                   |
+| Faithful or partially supported         | 0.80                   | 0.81                   |
+| Citation inside the expected window     | 0.87                   | 0.90                   |
+| False refusals                          | 0.09                   | **0.05**               |
+| Refusal accuracy (9 unanswerable)       | 1.00                   | 1.00                   |
+| Latency median / max                    | 21.8 s / 150.8 s       | 24.3 s / 72.7 s        |
+
+The exit criterion is met: hybrid answers 18 points more questions correctly, finds the right moment first far more often, and halves false refusals, without inventing answers to unanswerable questions. Two results went the other way. **Visual questions** got worse (1 of 4): the vision model's OCR missed the small text the questions ask about (a photo credit, a date in a slide title), and the Golden Gate slide wasn't among the frames selected; n = 4 is too small to read much into either way. **Strict faithfulness** dropped from 0.70 to 0.60 while "faithful or partial" held: hybrid answers are longer and pull from more chunks, so the judge marks more of them partially supported.
+
+**Consequences.** Every new video spends extra time in two GPU stages: `embed` takes 2–7 s; `analyze_frames` took 45 s per frame on a quiet machine (Maher keynote: 14 frames in 10.6 min) and up to about 2 min per frame under memory pressure. Qwen3-VL also thinks before answering (ignoring `think: false`), so it needs a 2,048-token output cap; at 600 tokens most descriptions were cut off. Q&A answers are about 2.5 s slower at the median.
+
+**Alternatives considered.** A dedicated vector DB (rejected in ADR-014; pgvector keeps the published-transcript filter and FTS in one query). A cross-encoder reranker (deferred: recall@5 is already 0.98, and another model on 16 GB costs more than it would add). A model-based intent classifier (deterministic regexes were enough for the golden set). Describing every keyframe (about 3× the vision time for frames that are mostly the speaker).

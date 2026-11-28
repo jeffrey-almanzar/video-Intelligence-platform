@@ -56,6 +56,8 @@ class LLMRequest[T: BaseModel]:
     #: Output token cap (`num_predict`): bounds latency and catches runaway generations.
     max_output_tokens: int = 2048
     seed: int = 7
+    #: Base64-encoded images for vision models (Qwen3-VL), attached to the user message.
+    images: tuple[str, ...] = ()
 
     @property
     def options(self) -> dict[str, Any]:
@@ -77,6 +79,9 @@ class LLMRequest[T: BaseModel]:
                 self.schema.model_json_schema(),
                 self.options,
                 self.think,
+                # Hash the images, not the base64 text: the key stays short and still changes
+                # whenever an image does.
+                [hashlib.sha256(i.encode()).hexdigest() for i in self.images],
             ],
             sort_keys=True,
             ensure_ascii=False,
@@ -205,10 +210,10 @@ class LLM:
                     return LLMResult(value, key, True, 0)
 
             self.models_used.add(req.model)
-            messages = [
-                {"role": "system", "content": req.system},
-                {"role": "user", "content": req.prompt},
-            ]
+            user: dict[str, Any] = {"role": "user", "content": req.prompt}
+            if req.images:
+                user["images"] = list(req.images)
+            messages: list[dict[str, Any]] = [{"role": "system", "content": req.system}, user]
             tokens_in = tokens_out = 0
             errors = []
             last_value: T | None = None

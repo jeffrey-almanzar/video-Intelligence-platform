@@ -39,6 +39,9 @@ class AnalysisInput:
     #: Scene cuts from `detect_scenes` (ms); weak hints for chunk boundaries.
     scene_cuts_ms: list[int] = field(default_factory=list)
     title: str | None = None
+    #: What was on screen (from `analyze_frames`): (timestamp_ms, description). Shown to the map
+    #: step next to the transcript lines of the same moment.
+    frames: list[tuple[int, str]] = field(default_factory=list)
 
 
 @dataclass(frozen=True, slots=True)

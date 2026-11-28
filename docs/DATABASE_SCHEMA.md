@@ -538,3 +538,14 @@ Migrations `0005_auth.sql` (`refresh_tokens`) and `0006_conversations.sql` (`con
 | `messages.citations` is `[{idx, startMs, endMs}]` | Resolved and validated by the AI service at answer time, so the UI renders playable citations without a join                                                          |
 | `messages.grounding` stores the answer's flags    | `{cited, invalidCitationsRemoved, inferred, notCovered, unsupported, retrievalHits}`: the UI warns on unsupported answers, and Phase 6 evaluations can aggregate them |
 | `llm_calls` rows with `operation = 'qa_generate'` | Q&A calls are logged by the AI service against the job whose results answered them (`stage` is null)                                                                  |
+
+### Phase 6 (retrieval and vision)
+
+Migration `0007_retrieval_and_vision.sql` creates `transcript_chunks` and `frame_analyses` (§3.6) plus the `visual_type` enum, written by the AI service (`vip_ai_rw`) and readable by the API.
+
+| Change                                                                                | Reason                                                                                                                                                |
+| ------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `transcript_chunks.text` includes `[On screen at mm:ss: …]` notes                     | What was on screen is searchable by both the vector and the full-text index, and lands in the model's context next to the words spoken at that moment |
+| HNSW (`m = 16, ef_construction = 64`, cosine) plus a GIN index on the generated `tsv` | The two halves of hybrid retrieval, both filtered to one transcript (ADR-014, ADR-026)                                                                |
+| `frame_analyses.selection_score` stored                                               | Explains why each frame was sent to the vision model (deterministic selection signals)                                                                |
+| `finalize` requires chunks whenever the transcript has speech                         | A published video must be answerable by hybrid search                                                                                                 |

@@ -128,7 +128,9 @@ describe('Videos, uploads and processing (integration)', () => {
       'extract_media',
       'detect_scenes',
       'transcribe',
+      'analyze_frames',
       'analyze_transcript',
+      'embed',
       'finalize',
     ]);
     expect(await queue.state(res.body.job.id, 'probe', 1)).toBe('waiting');

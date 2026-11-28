@@ -1,7 +1,7 @@
 'use client';
 
 import { type FormEvent, type ReactNode, useEffect, useRef, useState } from 'react';
-import { parseAnswer, type Inline } from '@/lib/answer';
+import { groundingLabel, type Inline, parseAnswer } from '@/lib/answer';
 import { ApiError, api, apiFetch } from '@/lib/api';
 import { readSse } from '@/lib/sse';
 import type { Citation, Conversation, Message } from '@/lib/types';
@@ -74,6 +74,37 @@ function Answer({ text, citations }: { text: string; citations: Citation[] | nul
         ),
       )}
     </>
+  );
+}
+
+const LABELS = {
+  stated: {
+    text: 'Stated in the video',
+    hint: 'Every claim cites a moment where the speaker says it.',
+  },
+  interpretation: {
+    text: 'Includes AI interpretation',
+    hint: 'Parts marked “inferred”, or claims that didn’t match the moments they cite, go beyond what the speaker said.',
+  },
+  'not-covered': {
+    text: 'Not covered in this video',
+    hint: 'The AI found nothing in the video that answers this.',
+  },
+  unsupported: {
+    text: 'No supporting moment',
+    hint: 'This answer cites no moment in the video. Check it before relying on it.',
+  },
+} as const;
+
+function GroundingBadge({ message }: { message: Message }) {
+  const label = groundingLabel(message.grounding);
+  if (!label) return null;
+  const { text, hint } = LABELS[label];
+  return (
+    <p className={`${styles.badge} ${styles[`badge-${label}`]}`} title={hint}>
+      {text}
+      <span className="visually-hidden">. {hint}</span>
+    </p>
   );
 }
 
@@ -211,12 +242,8 @@ export function AskPanel({ videoId }: { videoId: string }) {
               key={m.id}
               className={`${styles.a} ${m.grounding?.notCovered ? styles.notCovered : ''}`}
             >
+              <GroundingBadge message={m} />
               <Answer text={m.content} citations={m.citations ?? []} />
-              {m.grounding?.unsupported && (
-                <p className={styles.warn}>
-                  This answer cites no moment in the video. Check it before relying on it.
-                </p>
-              )}
             </div>
           ),
         )}

@@ -166,7 +166,9 @@ def build_graph(deps: Deps) -> Any:
         errors: dict[str, Any] = {}
         notes: ChunkNotes | None
         try:
-            notes, salvaged = await map_chunk(llm, c, task["parts"], inp.language, inp.title, cfg)
+            notes, salvaged = await map_chunk(
+                llm, c, task["parts"], inp.language, inp.title, cfg, inp.frames
+            )
             if salvaged:
                 errors = {"map_salvaged": {str(c.index): True}}
         except LLMOutputError as exc:
@@ -406,7 +408,7 @@ def build_graph(deps: Deps) -> Any:
         return {"report": report}
 
     g = StateGraph(State)
-    for name, fn in [
+    nodes: list[tuple[str, Any]] = [
         ("prepare", prepare),
         ("map_chunk", map_node),
         ("aggregate", aggregate),
@@ -417,8 +419,9 @@ def build_graph(deps: Deps) -> Any:
         ("name_topics", name_topics),
         ("verify", verify),
         ("assemble", assemble),
-    ]:
-        g.add_node(name, fn)  # type: ignore[call-overload]
+    ]
+    for name, fn in nodes:
+        g.add_node(name, fn)
     g.add_edge(START, "prepare")
     g.add_conditional_edges("prepare", route_after_prepare, ["map_chunk", "assemble"])
     for a, b in [

@@ -98,12 +98,18 @@ class Settings(BaseSettings):
     analysis_map_model: str = "qwen3:4b"
     analysis_reduce_model: str = "qwen3:8b"
     embedding_model: str = "qwen3-embedding:0.6b"
+    vision_model: str = "qwen3-vl:4b"
+    #: Selected frames per hour of video sent to the vision model (ARCHITECTURE §5.6).
+    frames_analyzed_per_hour: int = Field(30, ge=0, le=240)
     analysis_num_ctx: int = Field(8192, ge=2048, le=65536)
     analysis_chunk_tokens: int = Field(2000, ge=500, le=30000)
 
-    # --- baseline Q&A (Phase 5)
+    # --- Q&A (Phase 5 baseline, Phase 6 hybrid)
     #: 4B by default: interactive latency matters more here than in the batch analysis.
     qa_model: str = "qwen3:4b"
+    #: hybrid (Phase 6, default: won the golden QA evaluation, ADR-026) or baseline (Phase 5
+    #: full-text, kept for comparison).
+    qa_strategy: Literal["baseline", "hybrid"] = "hybrid"
     qa_num_ctx: int = Field(8192, ge=2048, le=65536)
 
     otel_exporter_otlp_endpoint: str | None = None

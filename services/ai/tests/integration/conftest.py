@@ -86,6 +86,8 @@ def settings(tmp_path: Path) -> Settings:
         / "fixtures"
         / "analysis"
         / "blender-excerpt.llm.json",
+        # VIP_RECORD_LLM=1: requests missing from the fixture go to Ollama and are added to it.
+        llm_record=os.environ.get("VIP_RECORD_LLM") == "1",
     )
 
 

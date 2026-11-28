@@ -1,0 +1,1053 @@
+{
+ "name": "2026-11-28-hybrid",
+ "strategy": "hybrid",
+ "qa_model": "qwen3:4b",
+ "judge": {
+  "model": "qwen3:8b",
+  "prompt_version": "qa-judge-v1"
+ },
+ "summary": {
+  "questions": 52,
+  "retrieval": {
+   "n": 42,
+   "recall_at_1": 0.8571,
+   "recall_at_3": 0.9524,
+   "recall_at_5": 0.9762,
+   "recall_at_10": 0.9762,
+   "context_recall": 0.9762,
+   "mrr_at_10": 0.9107
+  },
+  "answers": {
+   "n": 44,
+   "correct_rate": 0.8182,
+   "score": 0.8523,
+   "by_type": {
+    "factual": {
+     "n": 38,
+     "correct_rate": 0.8684,
+     "score": 0.8947
+    },
+    "visual": {
+     "n": 4,
+     "correct_rate": 0.25,
+     "score": 0.375
+    },
+    "broad": {
+     "n": 2,
+     "correct_rate": 1.0,
+     "score": 1.0
+    }
+   },
+   "faithful_rate": 0.5952,
+   "faithful_or_partial_rate": 0.8095,
+   "cited_rate": 0.9048,
+   "citation_in_window_rate": 0.9,
+   "false_refusal_rate": 0.0455
+  },
+  "refusal_accuracy": 1.0,
+  "latency_s": {
+   "median": 24.3,
+   "max": 72.7
+  }
+ },
+ "questions": [
+  {
+   "id": "blender-01",
+   "type": "factual",
+   "windows": [
+    [
+     30,
+     48
+    ]
+   ],
+   "question": "How long ago did Blender become open source, and where?",
+   "answer": "Blender became open source 20 years ago in Amsterdam, as stated in [S2].",
+   "not_covered": false,
+   "cited": 1,
+   "first_hit_rank": 2,
+   "context_hit": true,
+   "citation_in_window": true,
+   "correctness": "correct",
+   "faithfulness": "supported",
+   "latency_s": 16.2
+  },
+  {
+   "id": "blender-02",
+   "type": "factual",
+   "windows": [
+    [
+     55,
+     80
+    ]
+   ],
+   "question": "What did the doctors tell the speaker about his health?",
+   "answer": "The doctors declared the speaker \"fully clean\" [S4] and he stated he's \"as healthy as an old man like me can be\" [S5].",
+   "not_covered": false,
+   "cited": 2,
+   "first_hit_rank": 1,
+   "context_hit": true,
+   "citation_in_window": true,
+   "correctness": "correct",
+   "faithfulness": "supported",
+   "latency_s": 16.7
+  },
+  {
+   "id": "blender-03",
+   "type": "factual",
+   "windows": [
+    [
+     290,
+     345
+    ]
+   ],
+   "question": "Why wasn't Blender part of the metaverse events at SIGGRAPH?",
+   "answer": "According to the speaker, at SIGGRAPH in Vancouver, he asked an organizer why Blender wasn't invited to the metaverse events, and the organizer said \"we forgot probably\" [S43]. The speaker also stated he would have declined to attend even if invited, because \"Blender is still super small, and I don't think I can make any difference there\" [S45].",
+   "not_covered": false,
+   "cited": 2,
+   "first_hit_rank": 1,
+   "context_hit": true,
+   "citation_in_window": true,
+   "correctness": "correct",
+   "faithfulness": "partial",
+   "latency_s": 17.6
+  },
+  {
+   "id": "blender-04",
+   "type": "factual",
+   "windows": [
+    [
+     392,
+     430
+    ]
+   ],
+   "question": "What new initiative was announced for the future of Blender?",
+   "answer": "The new initiative announced for the future of Blender is the Blender Lab, described as \"a group of people who will be working on the future of Blender\" [S55][S56].",
+   "not_covered": false,
+   "cited": 2,
+   "first_hit_rank": 1,
+   "context_hit": true,
+   "citation_in_window": true,
+   "correctness": "partial",
+   "faithfulness": "partial",
+   "latency_s": 18.2
+  },
+  {
+   "id": "blender-05",
+   "type": "factual",
+   "windows": [
+    [
+     555,
+     628
+    ]
+   ],
+   "question": "What are the three freedoms behind 'the freedom to create'?",
+   "answer": "The three freedoms behind \"the freedom to create\" are:\n\n1. Open source (access to code and ability to make changes) [S75][S76]\n2. Access to creative resources (assets and production knowledge) [S76][S77]\n3. Access to markets (ability to sell work without being locked up in platforms) [S78][S80]\n\nThese are explicitly described as \"the three core freedoms\" that the speaker defines as essential for Blender's mission to empower artists.",
+   "not_covered": false,
+   "cited": 5,
+   "first_hit_rank": 1,
+   "context_hit": true,
+   "citation_in_window": true,
+   "correctness": "correct",
+   "faithfulness": "partial",
+   "latency_s": 44.1
+  },
+  {
+   "id": "blender-06",
+   "type": "factual",
+   "windows": [
+    [
+     628,
+     712
+    ]
+   ],
+   "question": "What are Blender apps?",
+   "answer": "Blender apps are applications created using Blender 2.8's architecture where Python controls the UI and functionality [S84][S85]. They allow users to create complete new applications by wrapping Blender files with configuration sets [S86]. Examples include video players, 3D printing tools, and experiences to share online [S89][S90]. These apps can be distributed to clients for 3D visualizations of buildings or products [S91]. The speaker notes they're \"not something really new\" but a redefined concept for creating fully Blender-compatible applications [S83].",
+   "not_covered": false,
+   "cited": 7,
+   "first_hit_rank": 1,
+   "context_hit": true,
+   "citation_in_window": true,
+   "correctness": "partial",
+   "faithfulness": "supported",
+   "latency_s": 23.2
+  },
+  {
+   "id": "blender-07",
+   "type": "factual",
+   "windows": [
+    [
+     719,
+     790
+    ]
+   ],
+   "question": "What happened to the Blender Studio feature film project?",
+   "answer": "The speaker states that Blender Studio had a feature film project that they initially worked on with Hollywood for funding, but it became \"more of a burden\" because Blender had \"taken off magically\" since 2019. [S104] They decided to \"find a production company who took over the rights\" [S105], which is now \"further developing it\" and might \"look for Blender Studios who will do it\" [S106]. Blender Studio \"might support them a little bit, but we're not going to make it ourselves\" [S107]. The speaker also mentions they worked on a short film called \"Sprite Fright\" as their biggest project in the past year [S108].",
+   "not_covered": false,
+   "cited": 5,
+   "first_hit_rank": 1,
+   "context_hit": true,
+   "citation_in_window": true,
+   "correctness": "correct",
+   "faithfulness": "supported",
+   "latency_s": 26.9
+  },
+  {
+   "id": "blender-08",
+   "type": "factual",
+   "windows": [
+    [
+     795,
+     835
+    ]
+   ],
+   "question": "Which studio was shut down right when its series was ready, and by whom?",
+   "answer": "The studio that was shut down right when its series was ready was Tencent Animation, and Netflix pulled the plug on it. This is stated in [S110]: \"That's this big studio, 300-400 people all working on Blender. but a fantastic TV series. And basically, the day they were ready, Netflix pulled the plug and said, well, great job, right? And let's move on.\"",
+   "not_covered": false,
+   "cited": 1,
+   "first_hit_rank": 1,
+   "context_hit": true,
+   "citation_in_window": true,
+   "correctness": "correct",
+   "faithfulness": "unsupported",
+   "latency_s": 25.0
+  },
+  {
+   "id": "blender-09",
+   "type": "factual",
+   "windows": [
+    [
+     1055,
+     1140
+    ]
+   ],
+   "question": "What license must Blender add-ons use, and what platform is planned for them?",
+   "answer": "Blender add-ons must use the GPL license, as stated in [S141]: \"there have to be GPL too.\" The planned platform is an extensions platform managed by the Blender Project, similar to Mozilla, where \"pre-approved high quality add-ons are available for everyone\" [S147]. This platform will be managed with community and Blender Institute staff to ensure quality and balance between commercial and free software add-ons.",
+   "not_covered": false,
+   "cited": 2,
+   "first_hit_rank": 1,
+   "context_hit": true,
+   "citation_in_window": true,
+   "correctness": "correct",
+   "faithfulness": "partial",
+   "latency_s": 26.6
+  },
+  {
+   "id": "blender-10",
+   "type": "broad",
+   "windows": [],
+   "question": "What is the main message of this keynote?",
+   "answer": "The main message is that the speaker believes the metaverse should be built through open-source principles where artists have freedom and control over their work and livelihoods. This is emphasized in [S66] where the speaker states \"the way how to make it is by not wanting to make it\" and focuses on creating tools that allow artists to \"connect to the web, share work, collaborate, and have a fair living.\" The speaker also highlights Blender's community as a model for this approach, contrasting it with Hollywood's closed systems in [S128].",
+   "not_covered": false,
+   "cited": 2,
+   "first_hit_rank": null,
+   "context_hit": false,
+   "citation_in_window": false,
+   "correctness": "correct",
+   "faithfulness": "partial",
+   "latency_s": 44.7
+  },
+  {
+   "id": "blender-11",
+   "type": "unanswerable",
+   "windows": [],
+   "question": "Which GPU does the speaker recommend for rendering in Blender?",
+   "answer": "This isn't covered in the video. The video discusses Blender's role in the metaverse, open-source philosophy, Blender apps, and the speaker's message to Hollywood, but doesn't mention any specific GPU recommendations for rendering in Blender.",
+   "not_covered": true,
+   "cited": 0,
+   "first_hit_rank": null,
+   "context_hit": false,
+   "citation_in_window": false,
+   "correctness": "n/a",
+   "faithfulness": "n/a",
+   "latency_s": 17.4
+  },
+  {
+   "id": "blender-12",
+   "type": "unanswerable",
+   "windows": [],
+   "question": "When will Blender 4.0 be released?",
+   "answer": "This isn't covered in the video. The video discusses Blender 2.8 (which is mentioned as \"the wrapping up of the Blender 2.8 project\") and initiatives like Blender Lab, but doesn't specify any release dates for Blender 4.0.",
+   "not_covered": true,
+   "cited": 0,
+   "first_hit_rank": null,
+   "context_hit": false,
+   "citation_in_window": false,
+   "correctness": "n/a",
+   "faithfulness": "n/a",
+   "latency_s": 15.9
+  },
+  {
+   "id": "copyrightx-01",
+   "type": "factual",
+   "windows": [
+    [
+     40,
+     95
+    ]
+   ],
+   "question": "Why did the architect of the Berlin train station sue, and what did the court order?",
+   "answer": "The architect Meinhard von Gurken sued because Deutsche Bahn decided not to install his original cathedral-like vaulted ceiling but instead installed a cheaper flat metal ceiling designed by another architect [S4][S5][S6][S8]. He considered this alteration equivalent to \"ripping pages out of a novel\" [S9]. The court ordered the ceiling rebuilt despite the reportedly 30 million euro cost [S10][S11].",
+   "not_covered": false,
+   "cited": 7,
+   "first_hit_rank": 1,
+   "context_hit": true,
+   "citation_in_window": true,
+   "correctness": "correct",
+   "faithfulness": "supported",
+   "latency_s": 27.5
+  },
+  {
+   "id": "copyrightx-02",
+   "type": "factual",
+   "windows": [
+    [
+     88,
+     150
+    ]
+   ],
+   "question": "What did the shopping mall do to Michael Snow's sculpture of geese?",
+   "answer": "The shopping mall hung red ribbons around the neck of each goose as part of its Christmas display in 1982. [S14]",
+   "not_covered": false,
+   "cited": 1,
+   "first_hit_rank": 1,
+   "context_hit": true,
+   "citation_in_window": true,
+   "correctness": "correct",
+   "faithfulness": "supported",
+   "latency_s": 20.0
+  },
+  {
+   "id": "copyrightx-03",
+   "type": "factual",
+   "windows": [
+    [
+     190,
+     240
+    ]
+   ],
+   "question": "Which philosophers is personality theory associated with?",
+   "answer": "Personality theory is associated with Kant and Hegel, as stated in [S27] where the speaker explains \"The source in political philosophy of this approach is not Locke, but Kant and Hegel.\" The video also notes that contemporary scholars look to \"Kant and Hegel and more broadly to the personality theory of real property with which Kant and Hegel are commonly associated\" [S32].",
+   "not_covered": false,
+   "cited": 2,
+   "first_hit_rank": 2,
+   "context_hit": true,
+   "citation_in_window": true,
+   "correctness": "correct",
+   "faithfulness": "supported",
+   "latency_s": 18.1
+  },
+  {
+   "id": "copyrightx-04",
+   "type": "factual",
+   "windows": [
+    [
+     770,
+     812
+    ]
+   ],
+   "question": "Which variants of personality theory are most relevant to artists?",
+   "answer": "The most relevant variants of personality theory to artists are numbers 2, 5, 8, and 10 [S125]. These correspond to privacy, individual self-realization, identity, and self-expression [S126], as they address how artists' ability to control their creations maintains these aspects of personhood.",
+   "not_covered": false,
+   "cited": 2,
+   "first_hit_rank": 4,
+   "context_hit": true,
+   "citation_in_window": true,
+   "correctness": "correct",
+   "faithfulness": "supported",
+   "latency_s": 20.6
+  },
+  {
+   "id": "copyrightx-05",
+   "type": "factual",
+   "windows": [
+    [
+     940,
+     960
+    ]
+   ],
+   "question": "What is the droit de suite?",
+   "answer": "The droit de suite is the right to collect a fee when one's works are resold, such as when the current owner of a painting resells it to another collector [S151][S152][S153].",
+   "not_covered": false,
+   "cited": 3,
+   "first_hit_rank": 2,
+   "context_hit": true,
+   "citation_in_window": true,
+   "correctness": "correct",
+   "faithfulness": "supported",
+   "latency_s": 14.7
+  },
+  {
+   "id": "copyrightx-06",
+   "type": "factual",
+   "windows": [
+    [
+     610,
+     770
+    ]
+   ],
+   "question": "Why did Gary Larson ask fans not to post his cartoons online?",
+   "answer": "Gary Larson asked fans not to post his cartoons online because he viewed them as \"my children, of sorts\" [S114], comparing their online sharing to \"getting the call at 2 in the morning\" [S115] from a child who goes to someone else's house without telling their parent. He described this as a concern about where his creative work goes \"at night without telling me\" [S114], reflecting his personality theory perspective that artistic creations are extensions of the creator's identity [S165].",
+   "not_covered": false,
+   "cited": 3,
+   "first_hit_rank": 1,
+   "context_hit": true,
+   "citation_in_window": true,
+   "correctness": "correct",
+   "faithfulness": "supported",
+   "latency_s": 59.6
+  },
+  {
+   "id": "copyrightx-07",
+   "type": "factual",
+   "windows": [
+    [
+     1205,
+     1300
+    ]
+   ],
+   "question": "What was the Vanna White case about, and who won?",
+   "answer": "The Vanna White case involved Samsung's advertisement that depicted a robot mimicking Vanna White's appearance, pose, and style from the game show Wheel of Fortune. Vanna White sued Samsung, arguing the ad constituted commercial appropriation of her identity, and she won the lawsuit (she \"prevailed\"). [S209][S210]",
+   "not_covered": false,
+   "cited": 2,
+   "first_hit_rank": 1,
+   "context_hit": true,
+   "citation_in_window": true,
+   "correctness": "correct",
+   "faithfulness": "supported",
+   "latency_s": 30.3
+  },
+  {
+   "id": "copyrightx-08",
+   "type": "factual",
+   "windows": [
+    [
+     955,
+     1013
+    ]
+   ],
+   "question": "Does international law force the US to recognize moral rights?",
+   "answer": "No, international law does not force the US to recognize moral rights. [S155][S156][S157][S158] indicate that while the Berne Convention purports to require recognition of moral rights (specifically attribution and integrity), it lacks teeth, and the TRIPS agreement does not incorporate these provisions, so the US can evade its treaty obligations.",
+   "not_covered": false,
+   "cited": 4,
+   "first_hit_rank": 1,
+   "context_hit": true,
+   "citation_in_window": true,
+   "correctness": "correct",
+   "faithfulness": "supported",
+   "latency_s": 34.0
+  },
+  {
+   "id": "copyrightx-09",
+   "type": "factual",
+   "windows": [
+    [
+     1390,
+     1432
+    ]
+   ],
+   "question": "How long does a copyright last compared with a patent?",
+   "answer": "According to the video, patents typically last 20 years from the date of patent application [S229], while copyrights last \"for the life of the author plus 70 years\" in most countries today [S229]. The speaker notes this significant difference in duration as part of their discussion on how copyright terms might be too long if the principal function is to protect an author's personhood interests.",
+   "not_covered": false,
+   "cited": 1,
+   "first_hit_rank": 1,
+   "context_hit": true,
+   "citation_in_window": true,
+   "correctness": "correct",
+   "faithfulness": "partial",
+   "latency_s": 14.8
+  },
+  {
+   "id": "copyrightx-10",
+   "type": "broad",
+   "windows": [
+    [
+     1381,
+     1604
+    ]
+   ],
+   "question": "What copyright reforms does personality theory suggest?",
+   "answer": "Personality theory suggests several copyright reforms:\n\n- Shortening copyright duration from life + 70 years to just the life of the author [S231]\n- Strengthening protections for artists who sign away rights too quickly or for too little money [S246]\n- Increasing freedom to make derivative uses of existing creative works (e.g., photographs, films) through adjustments to fair use doctrine [S247][S258]\n- Potentially curtailing the right of integrity in countries with strong moral rights protections [S259]\n\nThe theory emphasizes that copyright should support \"individual or group self-fulfillment\" rather than economic interests [S224].",
+   "not_covered": false,
+   "cited": 6,
+   "first_hit_rank": 2,
+   "context_hit": true,
+   "citation_in_window": true,
+   "correctness": "correct",
+   "faithfulness": "unsupported",
+   "latency_s": 56.6
+  },
+  {
+   "id": "copyrightx-11",
+   "type": "unanswerable",
+   "windows": [],
+   "question": "What does the lecture say about trademark law?",
+   "answer": "This isn't covered in the video. The lecture focuses on copyright theory, particularly personality theory of copyright and its implications for moral rights, rather than trademark law.",
+   "not_covered": true,
+   "cited": 0,
+   "first_hit_rank": null,
+   "context_hit": false,
+   "citation_in_window": false,
+   "correctness": "n/a",
+   "faithfulness": "n/a",
+   "latency_s": 15.7
+  },
+  {
+   "id": "copyrightx-12",
+   "type": "unanswerable",
+   "windows": [],
+   "question": "Which country introduced the first copyright statute, according to the lecture?",
+   "answer": "This isn't covered in the video. The transcript discusses moral rights systems in",
+   "not_covered": true,
+   "cited": 0,
+   "first_hit_rank": null,
+   "context_hit": false,
+   "citation_in_window": false,
+   "correctness": "n/a",
+   "faithfulness": "n/a",
+   "latency_s": 66.4
+  },
+  {
+   "id": "copyrightx-13",
+   "type": "visual",
+   "windows": [
+    [
+     10,
+     45
+    ]
+   ],
+   "question": "What source is credited under the photo of the Berlin train station?",
+   "answer": "",
+   "not_covered": false,
+   "cited": 0,
+   "first_hit_rank": 1,
+   "context_hit": true,
+   "citation_in_window": false,
+   "correctness": "incorrect",
+   "faithfulness": "unsupported",
+   "latency_s": 72.7
+  },
+  {
+   "id": "copyrightx-14",
+   "type": "visual",
+   "windows": [
+    [
+     240,
+     620
+    ]
+   ],
+   "question": "What date appears in the title of the lecture's mind map?",
+   "answer": "This isn't covered in the",
+   "not_covered": false,
+   "cited": 0,
+   "first_hit_rank": 1,
+   "context_hit": true,
+   "citation_in_window": false,
+   "correctness": "incorrect",
+   "faithfulness": "unsupported",
+   "latency_s": 72.5
+  },
+  {
+   "id": "yale-01",
+   "type": "factual",
+   "windows": [
+    [
+     195,
+     260
+    ]
+   ],
+   "question": "What advantages of musical notation does the professor describe?",
+   "answer": "The professor describes two main advantages of musical notation: \n\n1. It allows the composer to specify \"rather precisely what he or she wants\" and \"write things out in the form of musical details\" [S28][S29]. \n\n2. It enables preservation of the work of art, allowing us to \"freeze dry this thing and store it and then bring it back to life, more or less exactly as the composer had intended\" [S36][S35]. \n\nThese advantages highlight how notation gives Western composers greater creative control and enables the preservation of musical works across time.",
+   "not_covered": false,
+   "cited": 4,
+   "first_hit_rank": 2,
+   "context_hit": true,
+   "citation_in_window": true,
+   "correctness": "correct",
+   "faithfulness": "supported",
+   "latency_s": 25.8
+  },
+  {
+   "id": "yale-02",
+   "type": "factual",
+   "windows": [
+    [
+     495,
+     545
+    ]
+   ],
+   "question": "Which jazz musician did the professor go to school with, and where?",
+   "answer": "The professor went to school with Chuck Mangione at the Eastman School of Music. [S69][S70]",
+   "not_covered": false,
+   "cited": 2,
+   "first_hit_rank": 1,
+   "context_hit": true,
+   "citation_in_window": true,
+   "correctness": "correct",
+   "faithfulness": "supported",
+   "latency_s": 15.8
+  },
+  {
+   "id": "yale-03",
+   "type": "factual",
+   "windows": [
+    [
+     755,
+     820
+    ]
+   ],
+   "question": "How do classical concert audiences behave compared with gamelan audiences?",
+   "answer": "Western classical concert audiences are described as quiet, passive, and \"mummified\" while waiting for the performance to \"come back to life\" (S106). In contrast, gamelan audiences actively participate by swaying back and forth, clapping, and applauding with the performance for particularly good solos (S101, S102). The speaker notes that in Western classical settings, audiences focus on how accurately performers reproduce the musical notation, whereas gamelan audiences engage with the music through physical response and interaction with the performance.",
+   "not_covered": false,
+   "cited": 0,
+   "first_hit_rank": 1,
+   "context_hit": true,
+   "citation_in_window": false,
+   "correctness": "correct",
+   "faithfulness": "unsupported",
+   "latency_s": 29.3
+  },
+  {
+   "id": "yale-04",
+   "type": "factual",
+   "windows": [
+    [
+     975,
+     1025
+    ]
+   ],
+   "question": "What does a dot after a note do?",
+   "answer": "A dot after a note adds 50% (or half) of the note's value, making it equal to 1.5 times the original note value. This is explained in [S135][S137] where the speaker states that adding a dot to a half note creates a value equal to three quarter notes (instead of two).",
+   "not_covered": false,
+   "cited": 2,
+   "first_hit_rank": 1,
+   "context_hit": true,
+   "citation_in_window": true,
+   "correctness": "correct",
+   "faithfulness": "partial",
+   "latency_s": 17.5
+  },
+  {
+   "id": "yale-05",
+   "type": "factual",
+   "windows": [
+    [
+     1035,
+     1080
+    ]
+   ],
+   "question": "What speed does the musical pulse roughly match?",
+   "answer": "The musical pulse roughly matches the human pulse at about 72 beats per minute, as stated in [S148][S149].",
+   "not_covered": false,
+   "cited": 2,
+   "first_hit_rank": 1,
+   "context_hit": true,
+   "citation_in_window": true,
+   "correctness": "correct",
+   "faithfulness": "supported",
+   "latency_s": 14.4
+  },
+  {
+   "id": "yale-06",
+   "type": "factual",
+   "windows": [
+    [
+     1400,
+     1450
+    ]
+   ],
+   "question": "Who wrote the Bulldog song?",
+   "answer": "This isn't covered in the video. The video mentions \"Bulldog\" as the Yale Fight Song but doesn't specify who composed it.",
+   "not_covered": true,
+   "cited": 0,
+   "first_hit_rank": 1,
+   "context_hit": true,
+   "citation_in_window": false,
+   "correctness": "correct",
+   "faithfulness": "n/a",
+   "latency_s": 38.7
+  },
+  {
+   "id": "yale-07",
+   "type": "factual",
+   "windows": [
+    [
+     1880,
+     1935
+    ]
+   ],
+   "question": "What is a pickup in music?",
+   "answer": "A pickup in music is a short musical phrase that precedes the downbeat, helping to create a strong landing on it (similar to how divers take a few steps before jumping off the board). [S256][S258][S259]",
+   "not_covered": false,
+   "cited": 3,
+   "first_hit_rank": 1,
+   "context_hit": true,
+   "citation_in_window": true,
+   "correctness": "correct",
+   "faithfulness": "supported",
+   "latency_s": 57.1
+  },
+  {
+   "id": "yale-08",
+   "type": "factual",
+   "windows": [
+    [
+     1955,
+     2430
+    ]
+   ],
+   "question": "What are the four ways composers signal where the downbeat is?",
+   "answer": "The speaker identifies four ways composers signal the downbeat:\n\n1. Duration: Longer notes held for a specific duration ([S269][S270])\n2. Accent: Stronger emphasis on certain beats ([S275][S281])\n3. Patterns of accompaniment (range): How accompaniment changes support the melody ([S286])\n4. Chord changes: Frequently occurring chord changes on the downbeat ([S300])\n\nThe speaker explicitly states there are \"four principal ways that composers signal to us the whereabouts of the downbeat\" ([S266]).",
+   "not_covered": false,
+   "cited": 7,
+   "first_hit_rank": 1,
+   "context_hit": true,
+   "citation_in_window": true,
+   "correctness": "correct",
+   "faithfulness": "supported",
+   "latency_s": 29.8
+  },
+  {
+   "id": "yale-09",
+   "type": "factual",
+   "windows": [
+    [
+     2300,
+     2345
+    ]
+   ],
+   "question": "Which band's album did the professor mistakenly attribute to 'Rem'?",
+   "answer": "",
+   "not_covered": false,
+   "cited": 0,
+   "first_hit_rank": 1,
+   "context_hit": true,
+   "citation_in_window": false,
+   "correctness": "incorrect",
+   "faithfulness": "unsupported",
+   "latency_s": 69.3
+  },
+  {
+   "id": "yale-10",
+   "type": "factual",
+   "windows": [
+    [
+     2585,
+     2937
+    ]
+   ],
+   "question": "What point does the professor make with Ravel's Bolero?",
+   "answer": "The professor states that Ravel's Bolero is \"unique\" because it \"takes some very basic patterns and simply repeats them over and over and over again for about fourteen and a half minutes, depending upon the tempo that the conductor is taking the music\" [S337][S338][S339]. This demonstrates how rhythm can be built through repetition rather than complex variations, serving as an example of the lecture's rhythm fundamentals.",
+   "not_covered": false,
+   "cited": 3,
+   "first_hit_rank": 1,
+   "context_hit": true,
+   "citation_in_window": true,
+   "correctness": "incorrect",
+   "faithfulness": "supported",
+   "latency_s": 42.2
+  },
+  {
+   "id": "yale-11",
+   "type": "unanswerable",
+   "windows": [],
+   "question": "What does the professor say about twelve-tone serialism?",
+   "answer": "This isn't covered in the video. The lecture focuses on rhythm fundamentals, pulse, beat, meter, and musical notation - but twelve-tone serialism is not mentioned or discussed in any of the provided transcript segments.",
+   "not_covered": true,
+   "cited": 0,
+   "first_hit_rank": null,
+   "context_hit": false,
+   "citation_in_window": false,
+   "correctness": "n/a",
+   "faithfulness": "n/a",
+   "latency_s": 66.8
+  },
+  {
+   "id": "yale-12",
+   "type": "unanswerable",
+   "windows": [],
+   "question": "When is the midterm exam?",
+   "answer": "This isn't covered in the video. The video covers rhythm fundamentals, Western musical notation, pulse, beat, meter, and demonstrates concepts like duple meter through examples such as the Yale Fight Song.",
+   "not_covered": true,
+   "cited": 0,
+   "first_hit_rank": null,
+   "context_hit": false,
+   "citation_in_window": false,
+   "correctness": "n/a",
+   "faithfulness": "n/a",
+   "latency_s": 24.3
+  },
+  {
+   "id": "maher-01",
+   "type": "factual",
+   "windows": [
+    [
+     510,
+     545
+    ]
+   ],
+   "question": "Which new Wikipedia went live, and since when had it been in progress?",
+   "answer": "The Tulu Wikipedia went live as of the weekend mentioned in the speech, and it had been under progress since 2014 [S76][S77].",
+   "not_covered": false,
+   "cited": 2,
+   "first_hit_rank": 1,
+   "context_hit": true,
+   "citation_in_window": true,
+   "correctness": "correct",
+   "faithfulness": "supported",
+   "latency_s": 13.2
+  },
+  {
+   "id": "maher-02",
+   "type": "factual",
+   "windows": [
+    [
+     335,
+     365
+    ]
+   ],
+   "question": "How many articles were created or improved at the Punjabi edit-a-thon?",
+   "answer": "According to [S54], the Punjabi edit-a-thon created or improved \"more than 2200 articles, 2200 articles\" at the multilingual event.",
+   "not_covered": false,
+   "cited": 1,
+   "first_hit_rank": 1,
+   "context_hit": true,
+   "citation_in_window": true,
+   "correctness": "incorrect",
+   "faithfulness": "supported",
+   "latency_s": 12.4
+  },
+  {
+   "id": "maher-03",
+   "type": "factual",
+   "windows": [
+    [
+     740,
+     765
+    ]
+   ],
+   "question": "How many people support Wikimedia financially each year, and with how much on average?",
+   "answer": "According to the transcript, Wikimedia is supported by 2.5 million people every year on average, with those contributors giving an average contribution of about $15 to the Wikimedia Projects [S107][S108].",
+   "not_covered": false,
+   "cited": 2,
+   "first_hit_rank": 1,
+   "context_hit": true,
+   "citation_in_window": true,
+   "correctness": "correct",
+   "faithfulness": "supported",
+   "latency_s": 12.3
+  },
+  {
+   "id": "maher-04",
+   "type": "factual",
+   "windows": [
+    [
+     860,
+     880
+    ]
+   ],
+   "question": "How many articles has the content translation tool helped translate?",
+   "answer": "The content translation tool has helped translate 100,000 articles across Wikimedia projects, as stated in [S126].",
+   "not_covered": false,
+   "cited": 1,
+   "first_hit_rank": 1,
+   "context_hit": true,
+   "citation_in_window": true,
+   "correctness": "correct",
+   "faithfulness": "unsupported",
+   "latency_s": 10.4
+  },
+  {
+   "id": "maher-05",
+   "type": "factual",
+   "windows": [
+    [
+     965,
+     1085
+    ]
+   ],
+   "question": "What is the New Readers initiative?",
+   "answer": "The New Readers Initiative is a Wikimedia Foundation program focused on supporting new internet users who are not yet participating in Wikimedia projects. [S141][S143] The initiative specifically targets regions where internet access is growing rapidly (10% annually) but participation in Wikimedia projects remains low. [S161] India is highlighted as a key focus area where the Foundation is working with communities to understand language-specific needs and develop targeted support. [S148][S150] The program aims to improve engagement with Wikimedia content by addressing structural barriers and understanding reader needs in diverse communities, with the goal of helping nearly 2 billion people across these regions access knowledge. [S151][S153]",
+   "not_covered": false,
+   "cited": 7,
+   "first_hit_rank": 1,
+   "context_hit": true,
+   "citation_in_window": true,
+   "correctness": "correct",
+   "faithfulness": "partial",
+   "latency_s": 32.4
+  },
+  {
+   "id": "maher-06",
+   "type": "factual",
+   "windows": [
+    [
+     1475,
+     1510
+    ]
+   ],
+   "question": "Is anyone from the region on the Wikimedia Foundation Board of Trustees?",
+   "answer": "No, the speaker states that currently there is no one from this region (India) on the Wikimedia Foundation Board of Trustees, which creates a \"hole\" in representation at the top of the movement. [S228][S229][S230]",
+   "not_covered": false,
+   "cited": 3,
+   "first_hit_rank": 1,
+   "context_hit": true,
+   "citation_in_window": true,
+   "correctness": "correct",
+   "faithfulness": "supported",
+   "latency_s": 24.0
+  },
+  {
+   "id": "maher-07",
+   "type": "factual",
+   "windows": [
+    [
+     1690,
+     1750
+    ]
+   ],
+   "question": "When will the movement strategy process start?",
+   "answer": "The movement strategy process will start at the beginning of 2017, as stated in [S275].",
+   "not_covered": false,
+   "cited": 1,
+   "first_hit_rank": 1,
+   "context_hit": true,
+   "citation_in_window": true,
+   "correctness": "correct",
+   "faithfulness": "supported",
+   "latency_s": 18.7
+  },
+  {
+   "id": "maher-08",
+   "type": "factual",
+   "windows": [
+    [
+     1800,
+     1865
+    ]
+   ],
+   "question": "What does the open hand symbol represent?",
+   "answer": "The open hand symbol represents \"peace and unity\" and \"the power to give and to receive\" according to Corbusier, the architect who designed it [S285][S286][S287]. Katherine Maher connects this to the Wikimedia movement by stating that \"we give knowledge and we receive it around the world\" [S288].",
+   "not_covered": false,
+   "cited": 4,
+   "first_hit_rank": 1,
+   "context_hit": true,
+   "citation_in_window": true,
+   "correctness": "correct",
+   "faithfulness": "supported",
+   "latency_s": 20.3
+  },
+  {
+   "id": "maher-09",
+   "type": "factual",
+   "windows": [
+    [
+     3430,
+     3530
+    ]
+   ],
+   "question": "What does Asaf offer people who don't know which channel to use?",
+   "answer": "Asaf offers to be a switchboard where people can reach out for help finding effective channels. According to [S519], he states: \"reach out to me and I will be your switchboard I will help you find the answer you need.\" He also mentions in [S521] that he will \"help you find that effective channel to get your help.\" This directly addresses people who don't know which channel to use.",
+   "not_covered": false,
+   "cited": 2,
+   "first_hit_rank": 1,
+   "context_hit": true,
+   "citation_in_window": true,
+   "correctness": "correct",
+   "faithfulness": "partial",
+   "latency_s": 31.0
+  },
+  {
+   "id": "maher-10",
+   "type": "factual",
+   "windows": [
+    [
+     3975,
+     4070
+    ]
+   ],
+   "question": "What should chapters focus on when planning, according to her?",
+   "answer": "According to Katherine Maher, chapters should focus on \"what are you good at? What can you do that nobody else can do? What can you do that the foundation is not doing?\" [S591]. She emphasizes that chapters are better at \"engaging locally with their own communities, with institutions in their country or in their environment\" [S593], and should identify \"what is not being done\" and \"where do you see a need\" [S595]. The foundation's role is to support this local expertise rather than duplicate efforts.",
+   "not_covered": false,
+   "cited": 3,
+   "first_hit_rank": 1,
+   "context_hit": true,
+   "citation_in_window": true,
+   "correctness": "correct",
+   "faithfulness": "supported",
+   "latency_s": 26.1
+  },
+  {
+   "id": "maher-11",
+   "type": "unanswerable",
+   "windows": [],
+   "question": "What is the Wikimedia Foundation's annual budget?",
+   "answer": "This isn't covered in the video. The video mentions that the Wikimedia Foundation receives support from about 2.5 million people annually who contribute an average of $15 each, totaling approximately $37.5 million, but doesn't state the exact annual budget figure.",
+   "not_covered": true,
+   "cited": 0,
+   "first_hit_rank": null,
+   "context_hit": false,
+   "citation_in_window": false,
+   "correctness": "n/a",
+   "faithfulness": "n/a",
+   "latency_s": 24.9
+  },
+  {
+   "id": "maher-12",
+   "type": "unanswerable",
+   "windows": [],
+   "question": "What is the Foundation's position on paid editing?",
+   "answer": "This isn't covered in the video. The video focuses on community collaboration, language support, strategic planning for the next decade, and the Wikimedia Foundation's role in supporting Wikimedia projects globally.",
+   "not_covered": true,
+   "cited": 0,
+   "first_hit_rank": null,
+   "context_hit": false,
+   "citation_in_window": false,
+   "correctness": "n/a",
+   "faithfulness": "n/a",
+   "latency_s": 16.6
+  },
+  {
+   "id": "maher-13",
+   "type": "visual",
+   "windows": [
+    [
+     725,
+     770
+    ]
+   ],
+   "question": "What landmark is pictured on the slide saying the Foundation is based in San Francisco?",
+   "answer": "This isn't covered in the video. The transcript describes a generic conference room slide with labeled chairs and a podium but does not mention any specific landmark in San Francisco.",
+   "not_covered": true,
+   "cited": 0,
+   "first_hit_rank": null,
+   "context_hit": false,
+   "citation_in_window": false,
+   "correctness": "correct",
+   "faithfulness": "n/a",
+   "latency_s": 15.0
+  },
+  {
+   "id": "maher-14",
+   "type": "visual",
+   "windows": [
+    [
+     965,
+     1030
+    ]
+   ],
+   "question": "What does the photo on the New Readers initiative slide show?",
+   "answer": "The photo on the New Readers initiative slide shows two children reading books, overlaid with the text \"New readers initiative\" [S148].",
+   "not_covered": false,
+   "cited": 1,
+   "first_hit_rank": 1,
+   "context_hit": true,
+   "citation_in_window": true,
+   "correctness": "partial",
+   "faithfulness": "unsupported",
+   "latency_s": 7.2
+  }
+ ],
+ "qa_set": "evals/golden/qa.json (written by Claude from transcripts and frames; not human-reviewed)",
+ "machine": "macOS-26.6.2-arm64-arm-64bit",
+ "date": "2026-11-28T13:38:19+00:00"
+}

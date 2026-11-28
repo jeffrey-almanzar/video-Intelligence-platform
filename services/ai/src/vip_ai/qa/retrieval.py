@@ -26,6 +26,8 @@ def tsquery(question: str) -> str | None:
 class Context:
     segments: list[Seg]
     hits: int
+    #: What retrieval returned, best first (before context expansion), for evaluation.
+    ranked: list[Seg]
     title: str | None
     summary: str | None
     chapters: list[tuple[int, str]]
@@ -100,6 +102,7 @@ async def retrieve(
         )
         hit_ids = [r[0] for r in await cur.fetchall()]
     segments: list[Seg] = []
+    ranked: list[Seg] = []
     if hit_ids:
         wanted = sorted({i + d for i in hit_ids for d in (-1, 0, 1)})
         cur = await conn.execute(
@@ -112,10 +115,6 @@ async def retrieve(
         )
         known = {r[0]: Seg(*r) for r in await cur.fetchall()}
         segments = expand(hit_ids, known, budget_tokens)
-    return Context(
-        segments=segments,
-        hits=len(hit_ids),
-        title=title,
-        summary=summary or None,
-        chapters=chapters,
-    )
+        ranked = [known[i] for i in hit_ids if i in known]
+    return Context(segments=segments, hits=len(hit_ids), ranked=ranked, title=title,
+                   summary=summary or None, chapters=chapters)  # fmt: skip
