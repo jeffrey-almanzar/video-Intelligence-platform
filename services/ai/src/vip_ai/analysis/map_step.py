@@ -44,9 +44,26 @@ def citation_validator(allowed: frozenset[int]) -> Validator:
     return check
 
 
+def lines_with_frames(chunk: Chunk, frames: list[tuple[int, str]]) -> str:
+    """Transcript lines, each followed by any on-screen note from its time span (notes after the
+    last segment's start go after it). Without frames this is exactly `segment_lines`."""
+    if not frames:
+        return segment_lines(chunk.segments)
+    out = []
+    segs = chunk.segments
+    for i, s in enumerate(segs):
+        out.append(segment_lines([s]))
+        end = segs[i + 1].start_ms if i + 1 < len(segs) else s.end_ms + 1
+        out.extend(
+            f"[On screen at {mmss(ts)}: {text}]" for ts, text in frames if s.start_ms <= ts < end
+        )
+    return "\n".join(out)
+
+
 def build_map_request(
-    chunk: Chunk, parts: int, language: str, title: str | None, cfg: AnalysisConfig
-) -> LLMRequest[ChunkNotes]:
+    chunk: Chunk, parts: int, language: str, title: str | None, cfg: AnalysisConfig,
+    frames: list[tuple[int, str]] | None = None,
+) -> LLMRequest[ChunkNotes]:  # fmt: skip
     context_block = (
         "End of the previous part, for context only (do not extract from it):\n"
         + segment_lines(chunk.context)
@@ -63,7 +80,7 @@ def build_map_request(
         start=mmss(chunk.start_ms),
         end=mmss(chunk.end_ms),
         context_block=context_block,
-        segments=segment_lines(chunk.segments),
+        segments=lines_with_frames(chunk, frames or []),
         first_id=chunk.segments[0].idx,
         last_id=chunk.segments[-1].idx,
     )
@@ -108,10 +125,11 @@ def salvage(notes: ChunkNotes, allowed: frozenset[int]) -> ChunkNotes:
 
 
 async def map_chunk(
-    llm: LLM, chunk: Chunk, parts: int, language: str, title: str | None, cfg: AnalysisConfig
-) -> tuple[ChunkNotes, bool]:
+    llm: LLM, chunk: Chunk, parts: int, language: str, title: str | None, cfg: AnalysisConfig,
+    frames: list[tuple[int, str]] | None = None,
+) -> tuple[ChunkNotes, bool]:  # fmt: skip
     """Returns (notes, salvaged). Raises LLMOutputError only if no schema-valid output came back."""
-    req = build_map_request(chunk, parts, language, title, cfg)
+    req = build_map_request(chunk, parts, language, title, cfg, frames)
     try:
         result = await llm.structured(req, citation_validator(chunk.idx_set))
     except LLMOutputError as exc:

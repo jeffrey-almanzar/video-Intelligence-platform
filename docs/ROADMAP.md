@@ -139,7 +139,7 @@ Details, measurements and exit-criteria results: [phases/PHASE_3_TRANSCRIPTION.m
 
 ---
 
-## Phase 6: Advanced AI
+## Phase 6: Advanced AI ✅ (completed 2026-11-28)
 
 | Deliverable        | Detail                                                                                                                               |
 | ------------------ | ------------------------------------------------------------------------------------------------------------------------------------ |
@@ -150,6 +150,8 @@ Details, measurements and exit-criteria results: [phases/PHASE_3_TRANSCRIPTION.m
 | Eval harness v2    | Retrieval Recall@k / MRR, answer faithfulness, refusal accuracy on unanswerable questions; **compared against the Phase 5 baseline** |
 
 **Exit criteria:** hybrid RAG measurably beats the baseline on the golden QA set (numbers committed), and the stated vs interpreted labelling is visible in the UI.
+
+**Result:** ✅ on 52 golden questions, hybrid answers 82% of answerable questions correctly (baseline 64%), MRR@10 0.91 (0.79), false refusals 5% (9%), with every unanswerable question still refused; each answer shows a grounding badge. Visual questions (n = 4) and strict faithfulness went the other way; see [phases/PHASE_6_ADVANCED_AI.md](phases/PHASE_6_ADVANCED_AI.md). The optional reranker was deferred (Recall@5 is already 0.98).
 
 ---
 

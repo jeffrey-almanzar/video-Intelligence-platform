@@ -69802,5 +69802,11 @@
   "input_tokens": 605,
   "output_tokens": 194,
   "done_reason": "stop"
+ },
+ "fc233d4493344816370ff21b": {
+  "content": "{\"visual_type\": \"slide\", \"description\": \"A standard color test pattern with vertical color bars (red, green, yellow, blue, pink, cyan), a diagonal gradient line, checkerboard patterns, and a timestamp display in the top-left corner.\", \"ocr_text\": \"00:00:02.000\\n50\"}",
+  "input_tokens": 1175,
+  "output_tokens": 914,
+  "done_reason": "stop"
  }
 }

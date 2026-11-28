@@ -29,6 +29,8 @@ import {
 const citext = customType<{ data: string }>({ dataType: () => 'citext' });
 const bytea = customType<{ data: Buffer }>({ dataType: () => 'bytea' });
 const tsvector = customType<{ data: string }>({ dataType: () => 'tsvector' });
+/** pgvector column; 1024 dimensions = Qwen3-Embedding-0.6B (ADR-014). */
+const vector1024 = customType<{ data: number[] }>({ dataType: () => 'vector(1024)' });
 const ts = (name: string) => timestamp(name, { withTimezone: true, mode: 'date' });
 const createdAt = () => ts('created_at').notNull().defaultNow();
 const updatedAt = () => ts('updated_at').notNull().defaultNow();
@@ -82,6 +84,15 @@ export const highlightKind = pgEnum('highlight_kind', [
   'qa',
 ]);
 export const messageRole = pgEnum('message_role', ['user', 'assistant']);
+export const visualType = pgEnum('visual_type', [
+  'slide',
+  'code',
+  'diagram',
+  'demo',
+  'chart',
+  'person',
+  'other',
+]);
 export const mediaAssetKind = pgEnum('media_asset_kind', [
   'audio',
   'keyframe',
@@ -549,4 +560,64 @@ export const messages = pgTable(
     createdAt: createdAt(),
   },
   (t) => [index('messages_conversation_idx').on(t.conversationId, t.createdAt)],
+);
+
+// ---------------------------------------------------------------- retrieval and vision (P)
+/** Retrieval chunks (~250–400 tokens) with embeddings for hybrid search (ADR-014, Phase 6). */
+export const transcriptChunks = pgTable(
+  'transcript_chunks',
+  {
+    id: uuid('id').primaryKey(),
+    transcriptId: uuid('transcript_id')
+      .notNull()
+      .references(() => transcripts.id, { onDelete: 'cascade' }),
+    // Denormalized so vector search filters by video without a join.
+    videoId: uuid('video_id')
+      .notNull()
+      .references(() => videos.id, { onDelete: 'cascade' }),
+    idx: integer('idx').notNull(),
+    firstSegmentIdx: integer('first_segment_idx').notNull(),
+    lastSegmentIdx: integer('last_segment_idx').notNull(),
+    startMs: integer('start_ms').notNull(),
+    endMs: integer('end_ms').notNull(),
+    // Spoken text, plus "[On screen: …]" notes from frame analysis inside the chunk's time range.
+    text: text('text').notNull(),
+    tokenCount: integer('token_count').notNull(),
+    embeddingModel: text('embedding_model').notNull(),
+    embedding: vector1024('embedding').notNull(),
+    tsv: tsvector('tsv').generatedAlwaysAs(sql`to_tsvector('simple', text)`),
+  },
+  (t) => [
+    uniqueIndex('transcript_chunks_idx_idx').on(t.transcriptId, t.idx),
+    index('transcript_chunks_embedding_idx')
+      .using('hnsw', t.embedding.op('vector_cosine_ops'))
+      .with({ m: 16, ef_construction: 64 }),
+    index('transcript_chunks_tsv_idx').using('gin', t.tsv),
+    index('transcript_chunks_video_idx').on(t.videoId),
+  ],
+);
+
+/** What Qwen3-VL saw on selected keyframes (Phase 6 multimodal). */
+export const frameAnalyses = pgTable(
+  'frame_analyses',
+  {
+    id: uuid('id').primaryKey(),
+    jobId: uuid('job_id')
+      .notNull()
+      .references(() => processingJobs.id, { onDelete: 'cascade' }),
+    assetId: uuid('asset_id')
+      .notNull()
+      .references(() => mediaAssets.id, { onDelete: 'cascade' }),
+    timestampMs: integer('timestamp_ms').notNull(),
+    visualType: visualType('visual_type').notNull(),
+    description: text('description').notNull(),
+    ocrText: text('ocr_text'),
+    selectionScore: real('selection_score'), // why this frame was chosen
+    model: text('model').notNull(),
+    createdAt: createdAt(),
+  },
+  (t) => [
+    uniqueIndex('frame_analyses_job_asset_idx').on(t.jobId, t.assetId),
+    index('frame_analyses_time_idx').on(t.jobId, t.timestampMs),
+  ],
 );

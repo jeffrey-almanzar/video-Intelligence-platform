@@ -28,6 +28,19 @@ async def run(ctx: StageContext) -> StageOutcome:
             raise PipelineError(
                 INTERNAL_ERROR, "integrity check failed: no transcript for this job"
             )
+        # Hybrid search needs chunks whenever there was speech (ADR-026).
+        cur = await conn.execute(
+            """
+            SELECT t.segment_count, (SELECT count(*) FROM transcript_chunks c WHERE c.transcript_id = t.id)
+              FROM transcripts t WHERE t.job_id = %s
+            """,
+            (ctx.job_id,),
+        )
+        row = await cur.fetchone()
+        if row and row[0] > 0 and row[1] < 1:
+            raise PipelineError(
+                INTERNAL_ERROR, "integrity check failed: transcript has no search chunks"
+            )
         cur = await conn.execute(
             "SELECT count(*) FROM intelligence_reports WHERE job_id = %s", (ctx.job_id,)
         )

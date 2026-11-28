@@ -209,3 +209,19 @@ describe('uploadVideo', () => {
     expect(server.deps.store.getItem(resumeKey(file(20)))).toBeNull();
   });
 });
+
+describe('groundingLabel', () => {
+  it('labels answers as stated, interpretation, not covered or unsupported', async () => {
+    const { groundingLabel } = await import('../lib/answer');
+    expect(groundingLabel(null)).toBeNull();
+    expect(groundingLabel({ incomplete: true, unsupported: true })).toBeNull();
+    expect(groundingLabel({ notCovered: true })).toBe('not-covered');
+    expect(groundingLabel({ unsupported: true })).toBe('unsupported');
+    expect(groundingLabel({ claims: 2, supportedClaims: 2 })).toBe('stated');
+    expect(groundingLabel({ claims: 2, supportedClaims: 1 })).toBe('interpretation');
+    expect(groundingLabel({ inferred: true, claims: 1, supportedClaims: 1 })).toBe(
+      'interpretation',
+    );
+    expect(groundingLabel({})).toBe('stated'); // Phase 5 answers: cited, no verification data
+  });
+});

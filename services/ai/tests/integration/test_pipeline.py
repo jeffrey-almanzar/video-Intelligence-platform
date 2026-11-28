@@ -9,7 +9,10 @@ from tests.integration.conftest import Harness
 
 pytestmark = pytest.mark.integration
 
-STAGES = ("probe", "extract_media", "detect_scenes", "transcribe", "analyze_transcript", "finalize")
+STAGES = (
+    "probe", "extract_media", "detect_scenes", "transcribe", "analyze_frames", "analyze_transcript",
+    "embed", "finalize",
+)  # fmt: skip
 
 
 async def _run_all(h: Harness, video_id: object, job_id: object) -> None:
@@ -29,13 +32,10 @@ async def test_happy_path_produces_assets_scenes_and_ready_video(
     )
     assert (status, active, duration, codec) == ("ready", job_id, 12_000, "h264")
     assert harness.one("SELECT status FROM processing_jobs WHERE id = %s", job_id) == "succeeded"
-    assert (
-        harness.one(
-            "SELECT count(*) FROM processing_stages WHERE job_id = %s AND status = 'succeeded'",
-            job_id,
-        )
-        == 6
-    )
+    assert harness.one(
+        "SELECT count(*) FROM processing_stages WHERE job_id = %s AND status = 'succeeded'",
+        job_id,
+    ) == len(STAGES)
     assert (
         harness.one(
             "SELECT count(*) FROM media_assets WHERE job_id = %s AND kind = 'audio'", job_id
@@ -57,7 +57,9 @@ async def test_happy_path_produces_assets_scenes_and_ready_video(
         "extract_media",
         "detect_scenes",
         "transcribe",
+        "analyze_frames",
         "analyze_transcript",
+        "embed",
         "finalize",
     ]
     # A sine tone has no speech: an empty transcript and an empty report, not an error.

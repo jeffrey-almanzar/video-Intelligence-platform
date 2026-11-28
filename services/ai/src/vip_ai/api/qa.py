@@ -16,8 +16,8 @@ from vip_ai.infra.ids import uuid7
 from vip_ai.llm.backend import LLMUnavailable
 from vip_ai.llm.factory import build_backend
 from vip_ai.llm.replay import MissingRecording
-from vip_ai.qa.answer import PROMPT_VERSION, Turn, stream_answer
-from vip_ai.qa.retrieval import retrieve
+from vip_ai.qa.answer import PROMPT_VERSION, Turn
+from vip_ai.qa.strategies import get_strategy
 
 log = structlog.get_logger("vip_ai.qa")
 router = APIRouter(prefix="/internal/v1", dependencies=[Depends(require_service_token)])
@@ -43,11 +43,11 @@ async def qa(body: QaRequest, request: Request) -> StreamingResponse:
         backend = build_backend(settings)
         done: dict[str, Any] | None = None
         try:
-            async with pool.connection() as conn:
-                ctx = await retrieve(conn, body.job_id, body.question)
             history = [Turn(t.role, t.content) for t in body.history]
-            async for event in stream_answer(backend, settings.qa_model, ctx, body.question, history,
-                                             num_ctx=settings.qa_num_ctx):  # fmt: skip
+            strategy = get_strategy(settings.qa_strategy)
+            async for event in strategy(
+                pool, backend, settings, body.job_id, body.question, history
+            ):
                 if event["type"] == "done":
                     done = event
                 yield (json.dumps(event, ensure_ascii=False) + "\n").encode()

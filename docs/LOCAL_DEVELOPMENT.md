@@ -87,7 +87,9 @@ Both should report `"status":"ok"`. The API reports `degraded` (HTTP 200) while 
 
 ## 5. Memory tips (16 GB)
 
-- Only one model is resident at a time: the pipeline uses `keep_alive: 0` and the `gpu` queue runs at concurrency 1.
+- The `gpu` queue runs at concurrency 1, so the pipeline uses one model at a time. Models stay loaded for `LLM_KEEP_ALIVE` after their last call (10 min by default). When memory is tight, start the worker with `LLM_KEEP_ALIVE=30s make ai-worker` so a finished model unloads quickly.
+- Phase 6 adds Qwen3-VL 4B (~3.6 GB) for `analyze_frames`. With the 8B analysis model, Docker and a browser, a 16 GB Mac swaps heavily; close heavy apps (or other Docker stacks) while videos process.
+- For long local runs (overnight processing, evaluations), prevent sleep with `caffeinate -i …`. Sleep can exhaust a stage's retries and skew the Docker VM clock, which makes S3 reject requests (`RequestTimeTooSkewed`) until it resyncs; retry the job with `POST /v1/jobs/:id/retry`.
 - Ollama's Homebrew service runs with flash attention and a q8_0 KV cache, which roughly halves KV memory compared with f16.
 - Start the observability stack only when you need it (~1 GB).
 - Browsers with many tabs plus an IDE can easily take 4–6 GB. Expect swapping if you run `qwen3:8b` alongside a heavy desktop session.

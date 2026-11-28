@@ -663,3 +663,29 @@
     opacity: 0.35;
   }
 }
+
+/* Grounding badge on answers: solid = stated, dashed = interpretation (same language as the report) */
+.badge {
+  display: inline-block;
+  margin: 0 0 6px;
+  padding: 0 8px;
+  border-radius: 3px;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 20px;
+}
+.badge-stated {
+  border: 1.5px solid var(--ink);
+}
+.badge-interpretation {
+  border: 1.5px dashed var(--slate);
+  color: var(--slate);
+}
+.badge-not-covered {
+  color: var(--slate);
+  border: 1px solid var(--rule);
+}
+.badge-unsupported {
+  color: var(--danger);
+  border: 1px solid var(--danger);
+}

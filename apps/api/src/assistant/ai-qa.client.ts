@@ -11,6 +11,12 @@ export type QaGrounding = {
   notCovered: boolean;
   unsupported: boolean;
   retrievalHits: number;
+  /** Phase 6 hybrid strategy: verification counts and the question's routed intent. */
+  claims?: number;
+  supportedClaims?: number;
+  intent?: 'broad' | 'visual' | 'specific';
+  /** The model reasoned through its whole budget and wrote no answer. */
+  incomplete?: boolean;
 };
 
 export type QaEvent =
@@ -27,7 +33,9 @@ export type QaEvent =
       tokensIn: number | null;
       tokensOut: number | null;
     }
-  | { type: 'error'; message: string };
+  | { type: 'error'; message: string }
+  /** Internal: what retrieval found (scored by the QA evaluation, never relayed). */
+  | { type: 'retrieval' };
 
 export type QaRequest = {
   jobId: string;

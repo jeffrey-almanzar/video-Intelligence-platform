@@ -101,7 +101,15 @@ export type Message = {
   role: 'user' | 'assistant';
   content: string;
   citations: Citation[] | null;
-  grounding: { notCovered?: boolean; unsupported?: boolean; inferred?: boolean } | null;
+  grounding: {
+    notCovered?: boolean;
+    unsupported?: boolean;
+    incomplete?: boolean;
+    inferred?: boolean;
+    /** Phase 6 verification: cited sentences, and how many matched what they cite. */
+    claims?: number;
+    supportedClaims?: number;
+  } | null;
   createdAt: string;
 };
 export type Conversation = { id: string; videoId: string; title: string | null; updatedAt: string };

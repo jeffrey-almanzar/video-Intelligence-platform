@@ -133,10 +133,12 @@ export class AssistantService {
           else if (event.type === 'delta') yield { type: 'delta', data: { text: event.text } };
           else if (event.type === 'error')
             yield { type: 'error', data: { message: event.message } };
-          else {
+          else if (event.type === 'done') {
             const saved = await save(db, id, jobId, event);
             yield { type: 'done', data: messageView(saved) };
           }
+          // Anything else (the internal `retrieval` event, or a type added later) is not for the
+          // browser, and must never be mistaken for the final answer.
         }
       } catch (error) {
         if (signal.aborted) return;

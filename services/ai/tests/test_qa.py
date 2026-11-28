@@ -4,7 +4,7 @@ citation validation (no database or model needed)."""
 from tests.llm_fakes import ScriptedBackend
 from vip_ai.analysis.types import Seg
 from vip_ai.llm.backend import StreamChunk
-from vip_ai.qa.answer import Turn, build_messages, stream_answer
+from vip_ai.qa.answer import INCOMPLETE_ANSWER, Turn, build_messages, stream_answer
 from vip_ai.qa.citations import parse_answer
 from vip_ai.qa.retrieval import Context, expand, tsquery
 
@@ -52,6 +52,7 @@ def test_messages_include_overview_chapters_excerpts_and_recent_history() -> Non
     ctx = Context(
         segments=[SEGS[3]],
         hits=1,
+        ranked=[SEGS[3]],
         title="Keynote",
         summary="A talk.",
         chapters=[(0, "Intro"), (65_000, "Lab")],
@@ -74,15 +75,37 @@ async def test_stream_answer_emits_deltas_then_a_validated_done_event() -> None:
                 yield StreamChunk(piece)
             yield StreamChunk("", True, 900, 12)
 
-    ctx = Context(segments=[SEGS[3]], hits=1, title=None, summary=None, chapters=[])
+    ctx = Context(
+        segments=[SEGS[3]], hits=1, ranked=[SEGS[3]], title=None, summary=None, chapters=[]
+    )
     events = [e async for e in stream_answer(Streamer([]), "m", ctx, "q", [])]
-    assert [e["type"] for e in events] == ["delta", "delta", "delta", "done"]
+    assert [e["type"] for e in events] == ["retrieval", "delta", "delta", "delta", "done"]
+    assert events[0]["items"] == [{"idx": 3, "startMs": 15000, "endMs": 20000}]
+    assert events[0]["context"] == [{"idx": 3, "startMs": 15000, "endMs": 20000}]
     done = events[-1]
     assert done["content"] == "Blender Lab is new [S3]."
     assert done["citations"] == [{"idx": 3, "startMs": 15000, "endMs": 20000}]
     assert done["grounding"]["invalidCitationsRemoved"] == 1
     assert done["grounding"]["unsupported"] is False
     assert (done["tokensIn"], done["tokensOut"]) == (900, 12)
+    assert done["grounding"]["incomplete"] is False
+
+
+async def test_stream_answer_says_so_when_reasoning_uses_the_whole_budget() -> None:
+    class Thinker(ScriptedBackend):
+        async def chat_stream(self, **_: object):  # type: ignore[no-untyped-def]
+            for _ in range(3):
+                yield StreamChunk("", thinking=True)
+            yield StreamChunk("", True, 900, 2048)  # stopped at num_predict, nothing visible
+
+    ctx = Context(
+        segments=[SEGS[3]], hits=1, ranked=[SEGS[3]], title=None, summary=None, chapters=[]
+    )
+    events = [e async for e in stream_answer(Thinker([]), "m", ctx, "q", [])]
+    done = events[-1]
+    assert {"type": "delta", "text": INCOMPLETE_ANSWER} in events
+    assert done["content"] == INCOMPLETE_ANSWER
+    assert done["grounding"]["incomplete"] is True
 
 
 def test_parse_answer_normalizes_label_style_and_list_citations() -> None:

@@ -38,6 +38,8 @@ describe('Ask AI conversations (integration)', () => {
         received.push(JSON.parse(body));
         res.writeHead(200, { 'content-type': 'application/x-ndjson' });
         const events = [
+          // Internal, as the real service sends first; must be ignored, not saved as the answer.
+          { type: 'retrieval', items: [{ idx: 1, startMs: 5000, endMs: 9000 }], context: [] },
           { type: 'status', status: 'thinking' },
           { type: 'delta', text: 'Tulu went live ' },
           { type: 'delta', text: '[S1].' },

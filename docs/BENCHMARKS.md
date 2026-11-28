@@ -229,3 +229,35 @@ Reasoning dominates: the first answer token arrives only after the model finishe
 | Record (`make e2e-record`) | 2.8 min                           | Same flow against real Qwen3 4B/8B and Qwen3-Embedding                                                        |
 
 The test covers sign-up, a browser multipart upload straight to storage, live processing over SSE, the report, seeking from a takeaway, keyboard tab navigation, transcript search, a cited answer whose citation seeks the player, axe-core WCAG 2 A/AA scans (no serious or critical violations on the sign-up, library and video pages), and sign-out.
+
+---
+
+## Phase 6: hybrid Q&A and vision
+
+**Setup:** M1 Pro / 16 GB, 2026-11-23 (baseline) and 2026-11-28 (hybrid). Qwen3 4B answers, Qwen3 8B judges (`qa-judge-v1`), Qwen3-Embedding 0.6B, Qwen3-VL 4B, Ollama 0.40.17. The machine was under memory pressure for parts of both runs, so latencies are indicative.
+
+### Golden QA set (52 questions over the four golden talks; `evals/results/qa/`)
+
+| Metric                                  | Baseline (FTS)         | Hybrid (dense + FTS, RRF) |
+| --------------------------------------- | ---------------------- | ------------------------- |
+| Recall@1 / @3 / @5 (42 answerable)      | 0.71 / 0.83 / 0.90     | 0.86 / 0.95 / 0.98        |
+| MRR@10                                  | 0.79                   | 0.91                      |
+| Context recall                          | 0.93                   | 0.98                      |
+| Correct (44 answerable)                 | 0.64                   | 0.82                      |
+| … factual (38) / broad (2) / visual (4) | 0.66 / 1 of 2 / 2 of 4 | 0.87 / 2 of 2 / 1 of 4    |
+| Faithful / faithful or partial          | 0.70 / 0.80            | 0.60 / 0.81               |
+| Cited / citation in window              | 0.88 / 0.87            | 0.90 / 0.90               |
+| False refusals                          | 0.09                   | 0.05                      |
+| Refusal accuracy (9 unanswerable)       | 1.00                   | 1.00                      |
+| Latency median / max                    | 21.8 s / 150.8 s       | 24.3 s / 72.7 s           |
+
+Analysis and caveats: [ADR-026](TECHNICAL_DECISIONS.md#adr-026-hybrid-retrieval-grounded-qa-graph-and-selective-vision-phase-6). The QA set was written by Claude and is not human-reviewed.
+
+### New pipeline stages (golden talks)
+
+| Stage            | Measured                                                                                                                         |
+| ---------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| `embed`          | 2.1–6.5 s per talk (16–59 chunks)                                                                                                |
+| `analyze_frames` | 45 s per described frame on a quiet machine (Maher keynote: 14 frames in 10.6 min); up to ~2 min per frame with swap above 10 GB |
+
+Qwen3-VL 4B reasons before answering even with `think: false`: with a 600-token output cap, 2 of 26 frames were described; with 2,048, 14 of 14 (Maher) and 32 of 38 across the three re-run talks.
